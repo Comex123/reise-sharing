@@ -1,6 +1,6 @@
-# Reise Sharing
+# MatchTrip
 
-Kleine statische Demo-Website, auf der sich Menschen fuer gemeinsame Reisen finden koennen, um Kosten zu teilen.
+Kleine statische Demo-App, in der Menschen passende Reisen finden, solo planen oder gemeinsam verreisen koennen.
 
 ## Lokal starten
 

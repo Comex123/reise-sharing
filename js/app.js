@@ -634,7 +634,7 @@
     }
 
     if (!trips.length) {
-      target.innerHTML = '<div class="empty-state">Keine Reisen passen gerade zu deinem Filter.</div>';
+      target.innerHTML = '<div class="empty-state">Keine MatchTrips passen gerade zu deinem Filter.</div>';
       return;
     }
 
@@ -707,7 +707,7 @@
         return matchesDestination && matchesBudget && matchesStyle && matchesGroupType && matchesTiming && matchesTravelMode && matchesAudience;
       });
 
-      setText("tripCount", filtered.length + (filtered.length === 1 ? " Reise" : " Reisen"));
+      setText("tripCount", filtered.length + (filtered.length === 1 ? " MatchTrip" : " MatchTrips"));
       renderTrips("tripGrid", filtered);
       highlightTripCard("");
 
@@ -844,7 +844,7 @@
       "    </form>",
       "  </section>",
       '  <div class="trip-actions">',
-      '    <button class="button button-primary" type="button" id="requestButton">' + escapeHtml(tripTravelMode(trip) === "solo" ? "Optionalen Kontakt starten" : "Smart Connect starten") + "</button>",
+      '    <button class="button button-primary" type="button" id="requestButton">' + escapeHtml(tripTravelMode(trip) === "solo" ? "Optionalen Connect starten" : "Connect starten") + "</button>",
       '    <a class="button button-secondary" href="reisen.html">Zurueck zur Liste</a>',
       "  </div>",
       "</article>",
@@ -876,7 +876,7 @@
       "    </ul>",
       "  </div>",
       '  <div class="smart-contact-shell">',
-      '    <p class="eyebrow">Smart Connect</p>',
+      '    <p class="eyebrow">Connect Flow</p>',
       '    <h3>' + escapeHtml(contactPlan.title) + "</h3>",
       '    <p class="trip-copy">' + escapeHtml(contactPlan.description) + "</p>",
       '    <ul class="smart-step-list">' + contactPlan.steps.map(function (step) {
@@ -1035,7 +1035,7 @@
         smartForm.reset();
         updateContactMode(contactPlan.recommendedMode);
         smartMessage.classList.remove("is-error");
-        smartMessage.textContent = "Smart Connect gestartet. Zuerst werden nur Alias, Kontaktweg und Intro geteilt.";
+        smartMessage.textContent = "Connect gestartet. Zuerst werden nur Alias, Kontaktweg und Intro geteilt.";
       });
     }
   }
@@ -1151,7 +1151,7 @@
       updateTimingUi();
       updateTravelModeUi();
       message.classList.remove("is-error");
-      message.textContent = 'Reise gespeichert. Du findest sie jetzt in "Reisen" und im Profil.';
+      message.textContent = 'MatchTrip gespeichert. Du findest ihn jetzt unter "Entdecken" und im Profil.';
     });
   }
 
