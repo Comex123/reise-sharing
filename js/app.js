@@ -81,9 +81,32 @@
     return trip.groupType || "Offen";
   }
 
-  function matchTypes(trip) {
+  function legacyAudienceLabel(value) {
+    const labels = {
+      Single: "Singles",
+      Paar: "Paare",
+      Familie: "Familien",
+      Freundesgruppe: "Freundesgruppen"
+    };
+
+    return labels[value] || value;
+  }
+
+  function tripAudiences(trip) {
+    if (Array.isArray(trip.audiences) && trip.audiences.length) {
+      return trip.audiences;
+    }
+
     if (Array.isArray(trip.matchTypes) && trip.matchTypes.length) {
-      return trip.matchTypes;
+      return trip.matchTypes.map(legacyAudienceLabel);
+    }
+
+    if (trip.groupType === "Alleinerziehend") {
+      return ["Alleinerziehend", "Familien"];
+    }
+
+    if (trip.groupType) {
+      return [legacyAudienceLabel(trip.groupType)];
     }
 
     return ["Offen"];
@@ -95,8 +118,8 @@
     const safeStyles = trip.styles.map(function (style) {
       return '<span class="trip-chip">' + escapeHtml(style) + '</span>';
     }).join("");
-    const safeMatchTypes = matchTypes(trip).map(function (type) {
-      return escapeHtml(type);
+    const safeAudiences = tripAudiences(trip).map(function (audience) {
+      return escapeHtml(audience);
     }).join(", ");
 
     return [
@@ -117,7 +140,7 @@
       '    <span class="meta-pill">' + tripDays(trip) + ' Tage</span>',
       '    <span class="meta-pill">' + trip.seats + ' freie Plaetze</span>',
       '    <span class="meta-pill">Startet als: ' + escapeHtml(groupTypeLabel(trip)) + '</span>',
-      '    <span class="meta-pill">Passend fuer: ' + safeMatchTypes + '</span>',
+      '    <span class="meta-pill">Zielgruppen: ' + safeAudiences + '</span>',
       '  </div>',
       '  <p class="trip-copy">' + escapeHtml(excerpt(trip.notes, 90)) + '</p>',
       '  <div class="trip-card-footer">',
@@ -175,14 +198,14 @@
     const budgetInput = document.getElementById("filterBudget");
     const styleSelect = document.getElementById("filterStyle");
     const groupTypeSelect = document.getElementById("filterGroupType");
-    const matchTypeButtons = Array.prototype.slice.call(document.querySelectorAll("[data-match-type]"));
+    const audienceButtons = Array.prototype.slice.call(document.querySelectorAll("[data-audience]"));
     const clearFiltersButton = document.getElementById("clearFilters");
-    let activeMatchType = "";
+    let activeAudience = "";
 
-    function updateMatchTypeButtons(value) {
-      activeMatchType = value;
-      matchTypeButtons.forEach(function (button) {
-        const isActive = button.dataset.matchType === value;
+    function updateAudienceButtons(value) {
+      activeAudience = value;
+      audienceButtons.forEach(function (button) {
+        const isActive = button.dataset.audience === value;
         button.classList.toggle("is-active", isActive);
         button.setAttribute("aria-pressed", isActive ? "true" : "false");
       });
@@ -193,15 +216,15 @@
       const budget = Number(budgetInput.value || 0);
       const style = styleSelect.value;
       const groupType = groupTypeSelect.value;
-      const selectedMatchType = activeMatchType;
+      const selectedAudience = activeAudience;
       const filtered = getTrips().filter(function (trip) {
         const destinationText = [trip.destinationCity, trip.country, trip.startCity].join(" ").toLowerCase();
         const matchesDestination = !destination || destinationText.includes(destination);
         const matchesBudget = !budget || Number(trip.budgetPerPerson) <= budget;
         const matchesStyle = !style || trip.styles.includes(style);
         const matchesGroupType = !groupType || groupTypeLabel(trip) === groupType;
-        const matchesMatchType = !selectedMatchType || matchTypes(trip).includes(selectedMatchType);
-        return matchesDestination && matchesBudget && matchesStyle && matchesGroupType && matchesMatchType;
+        const matchesAudience = !selectedAudience || tripAudiences(trip).includes(selectedAudience);
+        return matchesDestination && matchesBudget && matchesStyle && matchesGroupType && matchesAudience;
       });
 
       setText("tripCount", filtered.length + (filtered.length === 1 ? " Reise" : " Reisen"));
@@ -213,9 +236,9 @@
       element.addEventListener("change", applyFilters);
     });
 
-    matchTypeButtons.forEach(function (button) {
+    audienceButtons.forEach(function (button) {
       button.addEventListener("click", function () {
-        updateMatchTypeButtons(button.dataset.matchType);
+        updateAudienceButtons(button.dataset.audience);
         applyFilters();
       });
     });
@@ -226,12 +249,12 @@
         budgetInput.value = "";
         styleSelect.value = "";
         groupTypeSelect.value = "";
-        updateMatchTypeButtons("");
+        updateAudienceButtons("");
         applyFilters();
       });
     }
 
-    updateMatchTypeButtons("");
+    updateAudienceButtons("");
     applyFilters();
   }
 
@@ -256,8 +279,8 @@
     const styleMarkup = trip.styles.map(function (style) {
       return '<span class="trip-chip">' + escapeHtml(style) + "</span>";
     }).join("");
-    const matchTypeMarkup = matchTypes(trip).map(function (type) {
-      return '<span class="meta-pill">' + escapeHtml(type) + "</span>";
+    const audienceMarkup = tripAudiences(trip).map(function (audience) {
+      return '<span class="meta-pill">' + escapeHtml(audience) + "</span>";
     }).join("");
 
     target.innerHTML = [
@@ -284,8 +307,8 @@
       '      <p class="trip-copy">Startet aktuell als <strong>' + escapeHtml(groupTypeLabel(trip)) + "</strong>.</p>",
       "    </div>",
       '    <div>',
-      '      <p class="eyebrow">Besonders passend fuer</p>',
-      '      <div class="detail-stats">' + matchTypeMarkup + "</div>",
+      '      <p class="eyebrow">Zielgruppen</p>',
+      '      <div class="detail-stats">' + audienceMarkup + "</div>",
       "    </div>",
       "  </div>",
       '  <div class="trip-actions">',
@@ -341,10 +364,10 @@
       event.preventDefault();
 
       const data = new FormData(form);
-      const selectedMatchTypes = data.getAll("matchTypes");
+      const selectedAudiences = data.getAll("audiences");
 
-      if (!selectedMatchTypes.length) {
-        message.textContent = "Bitte waehle mindestens eine passende Reisekonstellation aus.";
+      if (!selectedAudiences.length) {
+        message.textContent = "Bitte waehle mindestens eine Zielgruppe aus.";
         message.classList.add("is-error");
         return;
       }
@@ -361,7 +384,7 @@
         seats: Number(data.get("seats")),
         budgetPerPerson: Number(data.get("budgetPerPerson")),
         groupType: data.get("groupType"),
-        matchTypes: selectedMatchTypes,
+        audiences: selectedAudiences,
         styles: String(data.get("styles")).split(",").map(function (entry) {
           return entry.trim();
         }).filter(Boolean),

@@ -83,6 +83,7 @@
             <select name="groupType" required>
               <option value="Single">Single</option>
               <option value="Paar">Paar</option>
+              <option value="Alleinerziehend">Alleinerziehend</option>
               <option value="Familie">Familie</option>
               <option value="Freundesgruppe">Freundesgruppe</option>
             </select>
@@ -97,23 +98,39 @@
         </div>
 
         <fieldset class="choice-group">
-          <legend>Passend fuer</legend>
+          <legend>Zielgruppen</legend>
           <div class="choice-grid">
             <label class="choice-chip">
-              <input name="matchTypes" type="checkbox" value="Single" checked />
-              <span>Single</span>
+              <input name="audiences" type="checkbox" value="Studenten" />
+              <span>Studenten</span>
             </label>
             <label class="choice-chip">
-              <input name="matchTypes" type="checkbox" value="Paar" checked />
-              <span>Paar</span>
+              <input name="audiences" type="checkbox" value="Singles" checked />
+              <span>Singles</span>
             </label>
             <label class="choice-chip">
-              <input name="matchTypes" type="checkbox" value="Familie" />
-              <span>Familie</span>
+              <input name="audiences" type="checkbox" value="Alleinerziehend" />
+              <span>Alleinerziehend</span>
             </label>
             <label class="choice-chip">
-              <input name="matchTypes" type="checkbox" value="Freundesgruppe" />
-              <span>Freundesgruppe</span>
+              <input name="audiences" type="checkbox" value="Familien" />
+              <span>Familien</span>
+            </label>
+            <label class="choice-chip">
+              <input name="audiences" type="checkbox" value="Paare" checked />
+              <span>Paare</span>
+            </label>
+            <label class="choice-chip">
+              <input name="audiences" type="checkbox" value="Freundesgruppen" />
+              <span>Freundesgruppen</span>
+            </label>
+            <label class="choice-chip">
+              <input name="audiences" type="checkbox" value="Berufstaetige" />
+              <span>Berufstaetige</span>
+            </label>
+            <label class="choice-chip">
+              <input name="audiences" type="checkbox" value="Best Ager" />
+              <span>Best Ager</span>
             </label>
           </div>
         </fieldset>
@@ -136,6 +153,7 @@
           <li>Keine privaten Adressen.</li>
           <li>Budget nur grob angeben.</li>
           <li>Kontaktdaten spaeter freischalten.</li>
+          <li>Zielgruppen wie Studenten oder Alleinerziehend bewusst markieren.</li>
         </ul>
         <p id="createMessage" class="status-message">Noch nichts gespeichert.</p>
       </aside>
