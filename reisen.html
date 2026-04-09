@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
@@ -33,78 +33,105 @@
     </header>
 
     <main class="app-main page-stack">
-      <section class="page-intro card-surface page-intro-strong app-intro-card">
-      <p class="eyebrow">Reiseangebote</p>
-      <h1>Discover trips by vibe, budget and group.</h1>
-      <p class="lead">Jetzt auch nach Zielgruppen und Lebenssituationen filterbar.</p>
+      <section class="page-intro card-surface page-intro-strong app-intro-card discover-hero-card">
+        <p class="eyebrow">Explorer</p>
+        <h1>Trips, Zielgruppen und Kontaktpfade in einer Ansicht.</h1>
+        <p class="lead">Die Entdecken-Seite ist jetzt als Explorer gebaut: links Filter, rechts Signale, darunter der Feed.</p>
       </section>
 
-      <section class="filter-shell card-surface app-filter-panel">
-      <div class="filter-row">
-        <label>
-          <span>Ziel oder Land</span>
-          <input id="filterDestination" type="text" placeholder="z. B. Prag oder Italien" />
-        </label>
-        <label>
-          <span>Max. Budget pro Person</span>
-          <input id="filterBudget" type="number" min="0" step="10" placeholder="z. B. 250" />
-        </label>
-        <label>
-          <span>Reisestil</span>
-          <select id="filterStyle">
-            <option value="">Alle</option>
-            <option value="Staedtereise">Staedtereise</option>
-            <option value="Roadtrip">Roadtrip</option>
-            <option value="Natur">Natur</option>
-            <option value="Food">Food</option>
-            <option value="Budget">Budget</option>
-            <option value="Meer">Meer</option>
-            <option value="Kultur">Kultur</option>
-            <option value="Wandern">Wandern</option>
-            <option value="Wellness">Wellness</option>
-          </select>
-        </label>
-        <label>
-          <span>Wer reist schon?</span>
-          <select id="filterGroupType">
-            <option value="">Alle</option>
-            <option value="Single">Single</option>
-            <option value="Paar">Paar</option>
-            <option value="Alleinerziehend">Alleinerziehend</option>
-            <option value="Familie">Familie</option>
-            <option value="Freundesgruppe">Freundesgruppe</option>
-          </select>
-        </label>
-      </div>
-
-      <div class="filter-toolbar">
-        <div class="quick-filter-block">
-          <span class="filter-label">Zielgruppen</span>
-          <div class="quick-filter-group" id="audienceFilters">
-            <button class="quick-filter is-active" type="button" data-audience="">Alle</button>
-            <button class="quick-filter" type="button" data-audience="Studenten">Studenten</button>
-            <button class="quick-filter" type="button" data-audience="Singles">Singles</button>
-            <button class="quick-filter" type="button" data-audience="Alleinerziehend">Alleinerziehend</button>
-            <button class="quick-filter" type="button" data-audience="Familien">Familien</button>
-            <button class="quick-filter" type="button" data-audience="Paare">Paare</button>
-            <button class="quick-filter" type="button" data-audience="Freundesgruppen">Freundesgruppen</button>
-            <button class="quick-filter" type="button" data-audience="Berufstaetige">Berufstaetige</button>
-            <button class="quick-filter" type="button" data-audience="Best Ager">Best Ager</button>
+      <section class="discover-layout">
+        <aside class="filter-shell card-surface app-filter-panel discover-sidebar">
+          <div class="app-section-header compact-header">
+            <div>
+              <p class="eyebrow">Filter</p>
+              <h2>Trip Radar</h2>
+            </div>
           </div>
-        </div>
+          <div class="filter-row">
+            <label>
+              <span>Ziel oder Land</span>
+              <input id="filterDestination" type="text" placeholder="z. B. Prag oder Italien" />
+            </label>
+            <label>
+              <span>Max. Budget pro Person</span>
+              <input id="filterBudget" type="number" min="0" step="10" placeholder="z. B. 250" />
+            </label>
+            <label>
+              <span>Reisestil</span>
+              <select id="filterStyle">
+                <option value="">Alle</option>
+                <option value="Staedtereise">Staedtereise</option>
+                <option value="Roadtrip">Roadtrip</option>
+                <option value="Natur">Natur</option>
+                <option value="Food">Food</option>
+                <option value="Budget">Budget</option>
+                <option value="Meer">Meer</option>
+                <option value="Kultur">Kultur</option>
+                <option value="Wandern">Wandern</option>
+                <option value="Wellness">Wellness</option>
+              </select>
+            </label>
+            <label>
+              <span>Wer reist schon?</span>
+              <select id="filterGroupType">
+                <option value="">Alle</option>
+                <option value="Single">Single</option>
+                <option value="Paar">Paar</option>
+                <option value="Alleinerziehend">Alleinerziehend</option>
+                <option value="Familie">Familie</option>
+                <option value="Freundesgruppe">Freundesgruppe</option>
+              </select>
+            </label>
+          </div>
 
-        <button id="clearFilters" class="button button-secondary button-small" type="button">Filter zuruecksetzen</button>
-      </div>
-      </section>
+          <div class="filter-toolbar">
+            <div class="quick-filter-block">
+              <span class="filter-label">Zielgruppen</span>
+              <div class="quick-filter-group" id="audienceFilters">
+                <button class="quick-filter is-active" type="button" data-audience="">Alle</button>
+                <button class="quick-filter" type="button" data-audience="Studenten">Studenten</button>
+                <button class="quick-filter" type="button" data-audience="Singles">Singles</button>
+                <button class="quick-filter" type="button" data-audience="Alleinerziehend">Alleinerziehend</button>
+                <button class="quick-filter" type="button" data-audience="Familien">Familien</button>
+                <button class="quick-filter" type="button" data-audience="Paare">Paare</button>
+                <button class="quick-filter" type="button" data-audience="Freundesgruppen">Freundesgruppen</button>
+                <button class="quick-filter" type="button" data-audience="Berufstaetige">Berufstaetige</button>
+                <button class="quick-filter" type="button" data-audience="Best Ager">Best Ager</button>
+              </div>
+            </div>
+            <button id="clearFilters" class="button button-secondary button-small" type="button">Reset</button>
+          </div>
+        </aside>
 
-      <section class="section-block compact-top">
-      <div class="app-section-header">
-        <div>
-          <p class="eyebrow">Ergebnisse</p>
-          <h2 id="tripCount">0 Reisen</h2>
-        </div>
-      </div>
-      <div id="tripGrid" class="trip-grid"></div>
+        <section class="discover-main">
+          <section class="discover-signal-grid">
+            <article class="card-surface discover-signal-card accent-teal">
+              <p class="eyebrow">Flow</p>
+              <h3>Smart Connect</h3>
+              <p>Alias first, dann Fit-Check, danach private Freigabe.</p>
+            </article>
+            <article class="card-surface discover-signal-card accent-orange">
+              <p class="eyebrow">Match</p>
+              <h3>Zielgruppen</h3>
+              <p>Studenten, Familien, Singles, Alleinerziehend und mehr.</p>
+            </article>
+            <article class="card-surface discover-signal-card accent-soft">
+              <p class="eyebrow">Regionen</p>
+              <h3>Route Radar</h3>
+              <p>Trips nach Land, Stil, Budget und Reisesituation lesen.</p>
+            </article>
+          </section>
+
+          <section class="card-surface results-shell">
+            <div class="app-section-header">
+              <div>
+                <p class="eyebrow">Ergebnisse</p>
+                <h2 id="tripCount">0 Reisen</h2>
+              </div>
+            </div>
+            <div id="tripGrid" class="trip-grid"></div>
+          </section>
+        </section>
       </section>
     </main>
 

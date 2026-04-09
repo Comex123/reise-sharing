@@ -33,106 +33,144 @@
     </header>
 
     <main class="app-main page-stack">
-      <section class="card-surface app-hero-panel">
-        <p class="eyebrow">Mobile first travel matching</p>
-        <h1>Find people. Pick a region. Split the trip.</h1>
-        <p class="lead">Von Studenten bis Familien. Eine App fuer verschiedene Lebenssituationen.</p>
-        <div class="hero-actions">
-          <a class="button button-primary" href="reisen.html">Entdecken</a>
-          <a class="button button-secondary" href="reise-erstellen.html">Trip posten</a>
-        </div>
-        <div class="hero-badges">
-          <span>Studenten</span>
-          <span>Singles</span>
-          <span>Alleinerziehend</span>
-          <span>Familien</span>
-        </div>
-      </section>
-
-      <section class="app-stat-row">
-        <article class="mini-stat card-surface">
-          <strong id="homeTripCount">10</strong>
-          <span>Aktive Trips</span>
-        </article>
-        <article class="mini-stat card-surface">
-          <strong id="homeAvgBudget">0 EUR</strong>
-          <span>Budget im Schnitt</span>
-        </article>
-        <article class="mini-stat card-surface">
-          <strong id="homeOpenSeats">0</strong>
-          <span>Freie Plaetze</span>
-        </article>
-      </section>
-
-      <section class="card-surface app-map-card">
-        <div class="app-section-header">
-          <div>
-            <p class="eyebrow">Regionen</p>
-            <h2>Hot Zones</h2>
+      <section class="home-hero-grid">
+        <article class="card-surface app-hero-panel dashboard-main-card">
+          <p class="eyebrow">Travel Radar</p>
+          <h1>Find people, routes and budgets in one app flow.</h1>
+          <p class="lead">Mehr Dashboard, weniger Landingpage. Regionen, Zielgruppen und Kontaktfreigabe sitzen jetzt in einer Ansicht.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="reisen.html">Radar oeffnen</a>
+            <a class="button button-secondary" href="reise-erstellen.html">Trip posten</a>
           </div>
-          <a class="text-link" href="reisen.html">Alles ansehen</a>
-        </div>
-        <div class="app-region-grid">
-          <article class="app-region-tile is-featured">
-            <strong>Porto</strong>
-            <span>Food / Meer / Single</span>
-          </article>
-          <article class="app-region-tile">
-            <strong>Gardasee</strong>
-            <span>Roadtrip / Gruppe</span>
-          </article>
-          <article class="app-region-tile">
-            <strong>Prag</strong>
-            <span>City / Budget</span>
-          </article>
-          <article class="app-region-tile">
-            <strong>Valencia</strong>
-            <span>Paar / Strand</span>
-          </article>
-        </div>
-        <p class="trip-copy">Spaeter kommt hier direkt die Karte rein.</p>
+          <div class="hero-badges">
+            <span>Studenten</span>
+            <span>Singles</span>
+            <span>Alleinerziehend</span>
+            <span>Familien</span>
+            <span>Best Ager</span>
+          </div>
+        </article>
+
+        <aside class="card-surface dashboard-side-card">
+          <div class="app-section-header compact-header">
+            <div>
+              <p class="eyebrow">Live Board</p>
+              <h2>Signal Feed</h2>
+            </div>
+          </div>
+          <div class="signal-stack">
+            <article class="signal-card is-glow">
+              <strong id="homeTripCount">10</strong>
+              <span>aktive Trips</span>
+            </article>
+            <article class="signal-card">
+              <strong id="homeAvgBudget">0 EUR</strong>
+              <span>Budget im Schnitt</span>
+            </article>
+            <article class="signal-card">
+              <strong id="homeOpenSeats">0</strong>
+              <span>freie Plaetze</span>
+            </article>
+          </div>
+          <div class="privacy-beam">
+            <span class="beam-dot is-open"></span>
+            <span>Public first</span>
+            <span class="beam-dot is-mid"></span>
+            <span>Fit check</span>
+            <span class="beam-dot is-locked"></span>
+            <span>Private unlock</span>
+          </div>
+        </aside>
       </section>
 
-      <section class="card-surface app-quick-grid">
-        <article class="app-quick-card">
-          <p class="eyebrow">Match</p>
-          <h3>Studenten</h3>
-          <p>Budgetnahe Trips finden.</p>
+      <section class="persona-rail card-surface">
+        <div class="app-section-header compact-header">
+          <div>
+            <p class="eyebrow">Zielgruppen</p>
+            <h2>Direkte Einstiege</h2>
+          </div>
+          <a class="text-link" href="reisen.html">Entdecken</a>
+        </div>
+        <div class="persona-grid">
+          <article class="persona-chip"><strong>Studenten</strong><span>Budget & Stadt</span></article>
+          <article class="persona-chip"><strong>Singles</strong><span>Flexibel & spontan</span></article>
+          <article class="persona-chip"><strong>Alleinerziehend</strong><span>Flexibel & sicher</span></article>
+          <article class="persona-chip"><strong>Familien</strong><span>Ruhig & planbar</span></article>
+          <article class="persona-chip"><strong>Berufstaetige</strong><span>Wochenende & Struktur</span></article>
+          <article class="persona-chip"><strong>Best Ager</strong><span>Komfort & Tempo</span></article>
+        </div>
+      </section>
+
+      <section class="home-stage-grid">
+        <article class="card-surface app-map-card route-stage">
+          <div class="app-section-header">
+            <div>
+              <p class="eyebrow">Regionen</p>
+              <h2>Route Stage</h2>
+            </div>
+            <a class="text-link" href="reisen.html">Alle Regionen</a>
+          </div>
+          <div class="app-region-grid">
+            <article class="app-region-tile is-featured">
+              <strong>Porto</strong>
+              <span>Food / Meer / Single</span>
+            </article>
+            <article class="app-region-tile">
+              <strong>Gardasee</strong>
+              <span>Roadtrip / Gruppe</span>
+            </article>
+            <article class="app-region-tile">
+              <strong>Prag</strong>
+              <span>City / Budget</span>
+            </article>
+            <article class="app-region-tile">
+              <strong>Titisee</strong>
+              <span>Familie / Ruhe</span>
+            </article>
+          </div>
         </article>
-        <article class="app-quick-card">
-          <p class="eyebrow">Match</p>
-          <h3>Alleinerziehend</h3>
-          <p>Flexiblere Reisen sehen.</p>
-        </article>
-        <article class="app-quick-card">
-          <p class="eyebrow">Flow</p>
-          <h3>Familien</h3>
-          <p>Ruhigere Angebote schneller finden.</p>
-        </article>
+
+        <aside class="card-surface command-stack">
+          <article class="command-card">
+            <p class="eyebrow">Smart Connect</p>
+            <h3>Alias first</h3>
+            <p>Erst Intro und Kontaktweg. Private Daten spaeter.</p>
+          </article>
+          <article class="command-card">
+            <p class="eyebrow">Explorer</p>
+            <h3>Filter by life stage</h3>
+            <p>Von Studenten bis Familien in einem Feed.</p>
+          </article>
+          <article class="command-card">
+            <p class="eyebrow">App Flow</p>
+            <h3>Region. Match. Unlock.</h3>
+            <p>Weniger Scrollen, klarere Entscheidungen.</p>
+          </article>
+        </aside>
       </section>
 
       <section class="section-block">
         <div class="app-section-header">
           <div>
-            <p class="eyebrow">Trips fuer den Feed</p>
-            <h2>Beispielangebote</h2>
+            <p class="eyebrow">Radar Feed</p>
+            <h2>Aktuelle Trips</h2>
           </div>
           <a class="text-link" href="reisen.html">Zu allen Reisen</a>
         </div>
         <div id="featuredTrips" class="trip-grid"></div>
       </section>
 
-      <section class="card-surface app-flow-card">
+      <section class="card-surface app-flow-card compact-flow-card">
         <div class="app-section-header">
           <div>
-            <p class="eyebrow">So laeuft es</p>
-            <h2>Quick Flow</h2>
+            <p class="eyebrow">System</p>
+            <h2>App Flow</h2>
           </div>
         </div>
         <div class="app-flow-grid">
           <article class="flow-pill"><strong>01</strong><span>Region waehlen</span></article>
           <article class="flow-pill"><strong>02</strong><span>Gruppe filtern</span></article>
-          <article class="flow-pill"><strong>03</strong><span>Anfrage senden</span></article>
+          <article class="flow-pill"><strong>03</strong><span>Smart Connect starten</span></article>
           <article class="flow-pill"><strong>04</strong><span>Details unlocken</span></article>
         </div>
       </section>
