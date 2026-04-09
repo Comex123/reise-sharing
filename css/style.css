@@ -971,6 +971,28 @@ body {
   margin: 0 auto;
 }
 
+.site-header.app-header,
+.app-main,
+.app-footer-nav {
+  transition: transform 0.22s ease, opacity 0.22s ease, filter 0.22s ease;
+}
+
+body.is-swipe-exit-left .site-header.app-header,
+body.is-swipe-exit-left .app-main,
+body.is-swipe-exit-left .app-footer-nav {
+  transform: translateX(-22px);
+  opacity: 0.54;
+  filter: blur(1px);
+}
+
+body.is-swipe-exit-right .site-header.app-header,
+body.is-swipe-exit-right .app-main,
+body.is-swipe-exit-right .app-footer-nav {
+  transform: translateX(22px);
+  opacity: 0.54;
+  filter: blur(1px);
+}
+
 main {
   width: min(1040px, calc(100% - 24px));
   margin: 0 auto 28px;
@@ -2008,6 +2030,10 @@ textarea::placeholder {
 @media (max-width: 640px) {
   body {
     padding-bottom: 100px;
+  }
+
+  .app-main {
+    touch-action: pan-y;
   }
 
   .app-hero-panel,

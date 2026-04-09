@@ -907,6 +907,108 @@
     target.innerHTML = '<div class="empty-state">' + escapeHtml(text) + "</div>";
   }
 
+  function currentSwipePage(page) {
+    const allowedPages = ["home", "trips", "create", "profile"];
+    return allowedPages.includes(page) ? page : "";
+  }
+
+  function initSwipeNavigation() {
+    const currentPage = currentSwipePage(document.body.dataset.page);
+    const shell = document.querySelector(".app-shell");
+
+    if (!currentPage || !shell || !window.matchMedia("(max-width: 960px)").matches) {
+      return;
+    }
+
+    const swipePages = [
+      { key: "home", url: "index.html" },
+      { key: "trips", url: "reisen.html" },
+      { key: "create", url: "reise-erstellen.html" },
+      { key: "profile", url: "profil.html" }
+    ];
+    const currentIndex = swipePages.findIndex(function (page) {
+      return page.key === currentPage;
+    });
+
+    if (currentIndex === -1) {
+      return;
+    }
+
+    let startX = 0;
+    let startY = 0;
+    let startTarget = null;
+
+    function isInteractiveTarget(target) {
+      if (!target || !(target instanceof Element)) {
+        return false;
+      }
+
+      return Boolean(target.closest(
+        "input, textarea, select, button, a, label, .leaflet-container, .leaflet-control-container, .chat-message-list, .chat-thread-link, .profile-switch-button, [data-contact-mode], [data-audience]"
+      ));
+    }
+
+    function navigateTo(index, direction) {
+      const nextPage = swipePages[index];
+
+      if (!nextPage || nextPage.key === currentPage) {
+        return;
+      }
+
+      document.body.classList.add(direction === "left" ? "is-swipe-exit-left" : "is-swipe-exit-right");
+      window.setTimeout(function () {
+        window.location.href = nextPage.url;
+      }, 180);
+    }
+
+    document.addEventListener("touchstart", function (event) {
+      if (!event.changedTouches || event.changedTouches.length !== 1) {
+        return;
+      }
+
+      startTarget = event.target;
+
+      if (isInteractiveTarget(startTarget)) {
+        startX = 0;
+        startY = 0;
+        return;
+      }
+
+      startX = event.changedTouches[0].clientX;
+      startY = event.changedTouches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener("touchend", function (event) {
+      if (!startX || !event.changedTouches || event.changedTouches.length !== 1) {
+        return;
+      }
+
+      const endX = event.changedTouches[0].clientX;
+      const endY = event.changedTouches[0].clientY;
+      const diffX = endX - startX;
+      const diffY = endY - startY;
+      const absX = Math.abs(diffX);
+      const absY = Math.abs(diffY);
+
+      startX = 0;
+      startY = 0;
+
+      if (isInteractiveTarget(startTarget)) {
+        return;
+      }
+
+      if (absX < 72 || absX < absY * 1.25) {
+        return;
+      }
+
+      if (diffX < 0 && currentIndex < swipePages.length - 1) {
+        navigateTo(currentIndex + 1, "left");
+      } else if (diffX > 0 && currentIndex > 0) {
+        navigateTo(currentIndex - 1, "right");
+      }
+    }, { passive: true });
+  }
+
   function updateHomeMetrics(trips) {
     const totalTrips = trips.length;
     const totalBudget = trips.reduce(function (sum, trip) {
@@ -1870,6 +1972,8 @@
 
   function init() {
     const page = document.body.dataset.page;
+
+    initSwipeNavigation();
 
     if (page === "home") {
       initHome();
