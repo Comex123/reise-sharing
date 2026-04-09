@@ -77,12 +77,27 @@
     return "nach Bestaetigung";
   }
 
+  function groupTypeLabel(trip) {
+    return trip.groupType || "Offen";
+  }
+
+  function matchTypes(trip) {
+    if (Array.isArray(trip.matchTypes) && trip.matchTypes.length) {
+      return trip.matchTypes;
+    }
+
+    return ["Offen"];
+  }
+
   function tripCardMarkup(trip) {
     const host = getHostById(trip.hostId);
     const safeId = encodeURIComponent(trip.id);
     const safeStyles = trip.styles.map(function (style) {
       return '<span class="trip-chip">' + escapeHtml(style) + '</span>';
     }).join("");
+    const safeMatchTypes = matchTypes(trip).map(function (type) {
+      return escapeHtml(type);
+    }).join(", ");
 
     return [
       '<article class="trip-card card-surface">',
@@ -101,6 +116,8 @@
       '    <span class="meta-pill">' + escapeHtml(trip.country) + '</span>',
       '    <span class="meta-pill">' + tripDays(trip) + ' Tage</span>',
       '    <span class="meta-pill">' + trip.seats + ' freie Plaetze</span>',
+      '    <span class="meta-pill">Startet als: ' + escapeHtml(groupTypeLabel(trip)) + '</span>',
+      '    <span class="meta-pill">Passend fuer: ' + safeMatchTypes + '</span>',
       '  </div>',
       '  <p class="trip-copy">' + escapeHtml(excerpt(trip.notes, 140)) + '</p>',
       '  <div class="trip-card-footer">',
@@ -157,28 +174,64 @@
     const destinationInput = document.getElementById("filterDestination");
     const budgetInput = document.getElementById("filterBudget");
     const styleSelect = document.getElementById("filterStyle");
+    const groupTypeSelect = document.getElementById("filterGroupType");
+    const matchTypeButtons = Array.prototype.slice.call(document.querySelectorAll("[data-match-type]"));
+    const clearFiltersButton = document.getElementById("clearFilters");
+    let activeMatchType = "";
+
+    function updateMatchTypeButtons(value) {
+      activeMatchType = value;
+      matchTypeButtons.forEach(function (button) {
+        const isActive = button.dataset.matchType === value;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
+    }
 
     function applyFilters() {
       const destination = destinationInput.value.trim().toLowerCase();
       const budget = Number(budgetInput.value || 0);
       const style = styleSelect.value;
+      const groupType = groupTypeSelect.value;
+      const selectedMatchType = activeMatchType;
       const filtered = getTrips().filter(function (trip) {
         const destinationText = [trip.destinationCity, trip.country, trip.startCity].join(" ").toLowerCase();
         const matchesDestination = !destination || destinationText.includes(destination);
         const matchesBudget = !budget || Number(trip.budgetPerPerson) <= budget;
         const matchesStyle = !style || trip.styles.includes(style);
-        return matchesDestination && matchesBudget && matchesStyle;
+        const matchesGroupType = !groupType || groupTypeLabel(trip) === groupType;
+        const matchesMatchType = !selectedMatchType || matchTypes(trip).includes(selectedMatchType);
+        return matchesDestination && matchesBudget && matchesStyle && matchesGroupType && matchesMatchType;
       });
 
       setText("tripCount", filtered.length + (filtered.length === 1 ? " Reise" : " Reisen"));
       renderTrips("tripGrid", filtered);
     }
 
-    [destinationInput, budgetInput, styleSelect].forEach(function (element) {
+    [destinationInput, budgetInput, styleSelect, groupTypeSelect].forEach(function (element) {
       element.addEventListener("input", applyFilters);
       element.addEventListener("change", applyFilters);
     });
 
+    matchTypeButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        updateMatchTypeButtons(button.dataset.matchType);
+        applyFilters();
+      });
+    });
+
+    if (clearFiltersButton) {
+      clearFiltersButton.addEventListener("click", function () {
+        destinationInput.value = "";
+        budgetInput.value = "";
+        styleSelect.value = "";
+        groupTypeSelect.value = "";
+        updateMatchTypeButtons("");
+        applyFilters();
+      });
+    }
+
+    updateMatchTypeButtons("");
     applyFilters();
   }
 
@@ -203,6 +256,9 @@
     const styleMarkup = trip.styles.map(function (style) {
       return '<span class="trip-chip">' + escapeHtml(style) + "</span>";
     }).join("");
+    const matchTypeMarkup = matchTypes(trip).map(function (type) {
+      return '<span class="meta-pill">' + escapeHtml(type) + "</span>";
+    }).join("");
 
     target.innerHTML = [
       '<article class="detail-card card-surface">',
@@ -222,6 +278,16 @@
       "  </div>",
       '  <p class="trip-copy">' + escapeHtml(trip.notes) + "</p>",
       '  <div class="trip-tags">' + styleMarkup + "</div>",
+      '  <div class="detail-audience">',
+      '    <div>',
+      '      <p class="eyebrow">Reisekonstellation</p>',
+      '      <p class="trip-copy">Startet aktuell als <strong>' + escapeHtml(groupTypeLabel(trip)) + "</strong>.</p>",
+      "    </div>",
+      '    <div>',
+      '      <p class="eyebrow">Besonders passend fuer</p>',
+      '      <div class="detail-stats">' + matchTypeMarkup + "</div>",
+      "    </div>",
+      "  </div>",
       '  <div class="trip-actions">',
       '    <button class="button button-primary" type="button" id="requestButton">Anfrage senden</button>',
       '    <a class="button button-secondary" href="reisen.html">Zurueck zur Liste</a>',
@@ -275,6 +341,14 @@
       event.preventDefault();
 
       const data = new FormData(form);
+      const selectedMatchTypes = data.getAll("matchTypes");
+
+      if (!selectedMatchTypes.length) {
+        message.textContent = "Bitte waehle mindestens eine passende Reisekonstellation aus.";
+        message.classList.add("is-error");
+        return;
+      }
+
       const trip = {
         id: "t" + Date.now(),
         hostId: "u1",
@@ -286,6 +360,8 @@
         endDate: data.get("endDate"),
         seats: Number(data.get("seats")),
         budgetPerPerson: Number(data.get("budgetPerPerson")),
+        groupType: data.get("groupType"),
+        matchTypes: selectedMatchTypes,
         styles: String(data.get("styles")).split(",").map(function (entry) {
           return entry.trim();
         }).filter(Boolean),
@@ -296,6 +372,7 @@
 
       window.StorageApi.addTrip(trip);
       form.reset();
+      message.classList.remove("is-error");
       message.textContent = 'Reise gespeichert. Du findest sie jetzt in "Reisen" und im Profil.';
     });
   }

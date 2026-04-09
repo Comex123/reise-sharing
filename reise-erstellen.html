@@ -69,6 +69,15 @@
             <input name="styles" type="text" placeholder="Staedtereise, Food, Budget" required />
           </label>
           <label>
+            <span>Du reist als</span>
+            <select name="groupType" required>
+              <option value="Single">Single</option>
+              <option value="Paar">Paar</option>
+              <option value="Familie">Familie</option>
+              <option value="Freundesgruppe">Freundesgruppe</option>
+            </select>
+          </label>
+          <label>
             <span>Kontakt sichtbar ab</span>
             <select name="contactUnlock">
               <option value="after-approval">Nach Bestaetigung</option>
@@ -76,6 +85,28 @@
             </select>
           </label>
         </div>
+
+        <fieldset class="choice-group">
+          <legend>Passend fuer</legend>
+          <div class="choice-grid">
+            <label class="choice-chip">
+              <input name="matchTypes" type="checkbox" value="Single" checked />
+              <span>Single</span>
+            </label>
+            <label class="choice-chip">
+              <input name="matchTypes" type="checkbox" value="Paar" checked />
+              <span>Paar</span>
+            </label>
+            <label class="choice-chip">
+              <input name="matchTypes" type="checkbox" value="Familie" />
+              <span>Familie</span>
+            </label>
+            <label class="choice-chip">
+              <input name="matchTypes" type="checkbox" value="Freundesgruppe" />
+              <span>Freundesgruppe</span>
+            </label>
+          </div>
+        </fieldset>
 
         <label>
           <span>Beschreibung</span>
@@ -95,6 +126,7 @@
           <li>Nur allgemeine Reiseinfos, keine private Adresse.</li>
           <li>Budget moeglichst als groben Rahmen angeben.</li>
           <li>Persoenliche Kontaktdaten erst spaeter freischalten.</li>
+          <li>Waehle bewusst aus, ob dein Angebot eher fuer Singles, Paare oder Familien passt.</li>
           <li>Beschreibe lieber Stil und Erwartungen als zu viele sensible Details.</li>
         </ul>
         <p id="createMessage" class="status-message">Noch nichts gespeichert.</p>

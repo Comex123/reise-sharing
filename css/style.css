@@ -347,6 +347,7 @@ button {
 .hero-actions,
 .hero-metrics,
 .filter-row,
+ .filter-toolbar,
 .trip-topline,
 .trip-meta,
 .trip-tags,
@@ -560,6 +561,59 @@ button {
   flex: 1 1 220px;
 }
 
+.filter-toolbar {
+  align-items: end;
+  justify-content: space-between;
+  margin-top: 18px;
+}
+
+.quick-filter-block {
+  display: grid;
+  gap: 8px;
+}
+
+.filter-label {
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.quick-filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.quick-filter {
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.78);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.quick-filter:hover {
+  transform: translateY(-1px);
+  border-color: rgba(29, 106, 103, 0.24);
+}
+
+.quick-filter.is-active {
+  color: var(--white);
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--teal), #3f8f8b);
+  box-shadow: 0 12px 24px rgba(29, 106, 103, 0.22);
+}
+
+.button-small {
+  min-height: 42px;
+  padding: 0 14px;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -567,7 +621,42 @@ button {
   margin-bottom: 16px;
 }
 
-input,
+.choice-group {
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+}
+
+.choice-group legend {
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.choice-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.choice-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.74);
+  cursor: pointer;
+}
+
+.choice-chip input {
+  width: auto;
+  margin: 0;
+}
+
+input:not([type="checkbox"]),
 textarea,
 select {
   width: 100%;
@@ -579,7 +668,7 @@ select {
   font: inherit;
 }
 
-input:focus,
+input:not([type="checkbox"]):focus,
 textarea:focus,
 select:focus {
   outline: 2px solid rgba(29, 106, 103, 0.18);
@@ -598,6 +687,11 @@ textarea {
   background: rgba(29, 106, 103, 0.1);
 }
 
+.status-message.is-error {
+  color: var(--accent-strong);
+  background: rgba(210, 105, 60, 0.12);
+}
+
 .stack-list {
   display: grid;
   gap: 12px;
@@ -614,6 +708,15 @@ textarea {
 .detail-sidebar {
   display: grid;
   gap: 16px;
+}
+
+.detail-audience {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.54);
+  border: 1px solid var(--line);
 }
 
 .detail-sidebar {
@@ -657,7 +760,8 @@ textarea {
 
   .section-heading,
   .trip-title-row,
-  .trip-card-footer {
+  .trip-card-footer,
+  .filter-toolbar {
     align-items: start;
     flex-direction: column;
   }

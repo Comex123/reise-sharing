@@ -26,7 +26,7 @@
     <section class="page-intro card-surface page-intro-strong">
       <p class="eyebrow">Reiseangebote</p>
       <h1>Finde gemeinsame Trips statt allein zu planen</h1>
-      <p class="lead">Hier liegen zehn Beispielreisen bereit. Die Filter sind bewusst einfach gehalten, damit der lokale Prototyp schnell zeigt, wie Menschen nach Ziel, Budget und Reisetyp zusammenfinden koennen.</p>
+      <p class="lead">Hier liegen zehn Beispielreisen bereit. Neben Ziel, Budget und Reisetyp kannst du jetzt auch gezielt danach filtern, ob ein Angebot eher fuer Singles, Paare, Familien oder Freundesgruppen passt.</p>
     </section>
 
     <section class="filter-shell card-surface">
@@ -54,6 +54,31 @@
             <option value="Wellness">Wellness</option>
           </select>
         </label>
+        <label>
+          <span>Wer reist schon?</span>
+          <select id="filterGroupType">
+            <option value="">Alle</option>
+            <option value="Single">Single</option>
+            <option value="Paar">Paar</option>
+            <option value="Familie">Familie</option>
+            <option value="Freundesgruppe">Freundesgruppe</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="filter-toolbar">
+        <div class="quick-filter-block">
+          <span class="filter-label">Passend fuer</span>
+          <div class="quick-filter-group" id="matchTypeFilters">
+            <button class="quick-filter is-active" type="button" data-match-type="">Alle</button>
+            <button class="quick-filter" type="button" data-match-type="Single">Single</button>
+            <button class="quick-filter" type="button" data-match-type="Paar">Paar</button>
+            <button class="quick-filter" type="button" data-match-type="Familie">Familie</button>
+            <button class="quick-filter" type="button" data-match-type="Freundesgruppe">Freundesgruppe</button>
+          </div>
+        </div>
+
+        <button id="clearFilters" class="button button-secondary button-small" type="button">Filter zuruecksetzen</button>
       </div>
     </section>
 
