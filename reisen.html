@@ -4,9 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Reisen | Reise Sharing</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
   <link rel="stylesheet" href="css/style.css" />
   <script src="js/data.js" defer></script>
   <script src="js/storage.js" defer></script>
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+    defer
+  ></script>
   <script src="js/app.js" defer></script>
 </head>
 <body data-page="trips">
@@ -36,7 +48,7 @@
       <section class="page-intro card-surface page-intro-strong app-intro-card discover-hero-card">
         <p class="eyebrow">Explorer</p>
         <h1>Trips, Zielgruppen und Kontaktpfade in einer Ansicht.</h1>
-        <p class="lead">Die Entdecken-Seite ist jetzt als Explorer gebaut: links Filter, rechts Signale, darunter der Feed.</p>
+        <p class="lead">Die Entdecken-Seite zeigt jetzt oben die Live-Karte, darunter Signale und rechts daneben den Feed.</p>
       </section>
 
       <section class="discover-layout">
@@ -104,6 +116,25 @@
         </aside>
 
         <section class="discover-main">
+          <section class="card-surface results-shell map-stage-card">
+            <div class="app-section-header">
+              <div>
+                <p class="eyebrow">Live Map</p>
+                <h2>Europa auf einen Blick</h2>
+              </div>
+              <p id="mapSummary" class="mini-note">Marker werden geladen.</p>
+            </div>
+            <div class="map-toolbar">
+              <div class="map-legend">
+                <span class="map-legend-pill">Preis</span>
+                <span class="map-legend-pill">Marker anklicken</span>
+                <span class="map-legend-pill">Trip springt im Feed an</span>
+              </div>
+              <p class="mini-note">So wirkt es mehr wie eine Reise-App: erst Region, dann Angebot, dann Kontakt.</p>
+            </div>
+            <div id="tripMap" class="trip-map" aria-label="Karte mit Reise-Markern"></div>
+          </section>
+
           <section class="discover-signal-grid">
             <article class="card-surface discover-signal-card accent-teal">
               <p class="eyebrow">Flow</p>

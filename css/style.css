@@ -1371,6 +1371,198 @@ main {
   box-shadow: inset 0 0 0 1px rgba(255, 194, 157, 0.1);
 }
 
+.map-stage-card {
+  display: grid;
+  gap: 14px;
+}
+
+.map-toolbar,
+.map-legend,
+.map-picker-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.map-toolbar {
+  justify-content: space-between;
+}
+
+.map-legend-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 0.84rem;
+  font-weight: 700;
+  background: rgba(10, 19, 23, 0.92);
+  border: 1px solid rgba(121, 215, 207, 0.14);
+}
+
+.trip-map {
+  min-height: 420px;
+  border-radius: 26px;
+  border: 1px solid rgba(121, 215, 207, 0.14);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top right, rgba(121, 215, 207, 0.12), transparent 24%),
+    linear-gradient(180deg, rgba(8, 18, 22, 0.98), rgba(12, 27, 32, 0.94));
+}
+
+.trip-map-picker {
+  min-height: 340px;
+}
+
+.map-picker-field {
+  display: grid;
+  gap: 12px;
+}
+
+.map-picker-shell {
+  display: grid;
+  gap: 12px;
+}
+
+.map-picker-toolbar {
+  justify-content: flex-end;
+}
+
+.map-picker-status {
+  margin: 0;
+}
+
+.map-fallback {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.trip-card.is-selected {
+  transform: translateY(-4px);
+  border-color: rgba(255, 139, 93, 0.34);
+  box-shadow: 0 0 0 1px rgba(255, 139, 93, 0.16), var(--shadow-strong);
+}
+
+.trip-map .leaflet-container,
+.trip-map.leaflet-container {
+  background: #061014;
+  font: inherit;
+}
+
+.trip-map .leaflet-tile-pane {
+  filter: saturate(0.82) hue-rotate(178deg) brightness(0.72) contrast(1.02);
+}
+
+.trip-map .leaflet-control-zoom {
+  border: 1px solid rgba(121, 215, 207, 0.14);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+}
+
+.trip-map .leaflet-control-zoom a {
+  width: 38px;
+  height: 38px;
+  color: var(--text);
+  background: rgba(7, 16, 19, 0.92);
+  border-bottom-color: rgba(121, 215, 207, 0.12);
+}
+
+.trip-map .leaflet-control-attribution {
+  padding: 3px 8px;
+  color: rgba(239, 248, 246, 0.72);
+  background: rgba(7, 16, 19, 0.74);
+}
+
+.trip-map .leaflet-control-attribution a {
+  color: var(--teal);
+}
+
+.trip-map .leaflet-popup-content-wrapper,
+.trip-map .leaflet-popup-tip {
+  color: var(--text);
+  background: rgba(7, 16, 19, 0.96);
+  border: 1px solid rgba(121, 215, 207, 0.14);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.28);
+}
+
+.trip-map .leaflet-popup-content {
+  margin: 14px 16px;
+}
+
+.trip-map .leaflet-popup-close-button {
+  color: var(--muted);
+}
+
+.trip-map-popup {
+  display: grid;
+  gap: 6px;
+}
+
+.trip-map-popup strong {
+  font-size: 1rem;
+}
+
+.trip-map-popup p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.trip-map-marker {
+  background: transparent;
+  border: 0;
+}
+
+.map-marker-bubble {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 92px;
+  padding: 9px 12px 11px;
+  border-radius: 18px;
+  color: var(--white);
+  background: linear-gradient(135deg, #10282e, #1d7072 56%, #ff8b5d);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.28);
+}
+
+.map-marker-bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  width: 16px;
+  height: 16px;
+  background: #236f71;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.map-marker-bubble strong {
+  font-size: 0.96rem;
+  line-height: 1;
+}
+
+.map-marker-bubble span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.92;
+}
+
+.map-marker-bubble.is-picker {
+  background: linear-gradient(135deg, #2c3f43, #4f8682 58%, #ffc29d);
+}
+
 .results-shell {
   padding: 22px;
   border-radius: 30px;
@@ -1562,6 +1754,11 @@ textarea::placeholder {
     align-items: start;
     flex-direction: column;
   }
+
+  .map-toolbar {
+    align-items: start;
+    flex-direction: column;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1604,6 +1801,14 @@ textarea::placeholder {
   .persona-grid,
   .discover-signal-grid {
     grid-template-columns: 1fr;
+  }
+
+  .trip-map {
+    min-height: 320px;
+  }
+
+  .trip-map-picker {
+    min-height: 280px;
   }
 
   .app-footer-nav {

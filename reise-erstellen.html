@@ -4,9 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Reise erstellen | Reise Sharing</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
   <link rel="stylesheet" href="css/style.css" />
   <script src="js/data.js" defer></script>
   <script src="js/storage.js" defer></script>
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+    defer
+  ></script>
   <script src="js/app.js" defer></script>
 </head>
 <body data-page="create">
@@ -35,8 +47,8 @@
     <main class="app-main page-stack">
       <section class="page-intro card-surface app-intro-card">
       <p class="eyebrow">Neues Angebot</p>
-      <h1>Create a trip.</h1>
-      <p class="lead">Kurz, mobil, direkt.</p>
+      <h1>Trip mit Marker anlegen.</h1>
+      <p class="lead">Kurz, mobil und direkt fuer die Kartenansicht.</p>
       </section>
 
       <section class="form-layout">
@@ -140,6 +152,20 @@
           <textarea name="notes" rows="6" placeholder="Was ist geplant, wer passt gut dazu, was ist im Budget enthalten?" required></textarea>
         </label>
 
+        <fieldset class="choice-group map-picker-field">
+          <legend>Marker fuer die Zielregion</legend>
+          <p class="mini-note">Tippe ungefaehr auf die Region. Keine Privatadresse, nur den Zielpunkt fuer die App-Karte.</p>
+          <input name="lat" type="hidden" />
+          <input name="lng" type="hidden" />
+          <div class="map-picker-shell">
+            <div class="map-picker-toolbar">
+              <button class="button button-secondary button-small" type="button" id="resetCreateMap">Marker loeschen</button>
+            </div>
+            <div id="createTripMap" class="trip-map trip-map-picker" aria-label="Karte zum Setzen eines Reise-Markers"></div>
+          </div>
+          <p id="mapSelectionStatus" class="status-message map-picker-status">Noch kein Marker gesetzt.</p>
+        </fieldset>
+
         <div class="form-actions">
           <button class="button button-primary" type="submit">Reise speichern</button>
           <a class="button button-secondary" href="reisen.html">Zur Liste</a>
@@ -148,12 +174,13 @@
 
       <aside class="card-surface side-note">
         <p class="eyebrow">Hinweis</p>
-        <h2>Keep it clean</h2>
+        <h2>Sicher bleiben</h2>
         <ul class="bullet-list">
           <li>Keine privaten Adressen.</li>
           <li>Budget nur grob angeben.</li>
           <li>Kontaktdaten spaeter freischalten.</li>
           <li>Zielgruppen wie Studenten oder Alleinerziehend bewusst markieren.</li>
+          <li>Marker nur auf Stadt oder Region setzen, nicht auf deine Wohnung.</li>
         </ul>
         <p id="createMessage" class="status-message">Noch nichts gespeichert.</p>
       </aside>

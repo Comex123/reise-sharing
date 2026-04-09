@@ -132,6 +132,241 @@
     return ["Offen"];
   }
 
+  function hasTripLocation(trip) {
+    return Number.isFinite(Number(trip.lat)) && Number.isFinite(Number(trip.lng));
+  }
+
+  function highlightTripCard(tripId) {
+    const cards = Array.prototype.slice.call(document.querySelectorAll(".trip-card[data-trip-id]"));
+
+    cards.forEach(function (card) {
+      card.classList.toggle("is-selected", tripId && card.dataset.tripId === tripId);
+    });
+
+    const activeCard = cards.find(function (card) {
+      return card.dataset.tripId === tripId;
+    });
+
+    if (activeCard) {
+      activeCard.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
+
+  function tripMapPopupMarkup(trip) {
+    const host = getHostById(trip.hostId);
+
+    return [
+      '<div class="trip-map-popup">',
+      '  <p class="eyebrow">Live Angebot</p>',
+      '  <strong>' + escapeHtml(trip.title) + "</strong>",
+      '  <p>' + escapeHtml(trip.destinationCity) + ", " + escapeHtml(trip.country) + "</p>",
+      '  <p class="mini-note">' + escapeHtml(formatRange(trip.startDate, trip.endDate)) + "</p>",
+      '  <p class="mini-note">Mit ' + escapeHtml(host.name) + " | " + euro(trip.budgetPerPerson) + " | " + trip.seats + " freie Plaetze</p>",
+      '  <a class="text-link" href="reise-detail.html?id=' + encodeURIComponent(trip.id) + '">Details ansehen</a>',
+      "</div>"
+    ].join("");
+  }
+
+  function tripMarkerIcon(trip) {
+    return window.L.divIcon({
+      className: "trip-map-marker",
+      iconSize: [92, 50],
+      iconAnchor: [46, 50],
+      popupAnchor: [0, -44],
+      html: [
+        '<div class="map-marker-bubble">',
+        '  <strong>' + escapeHtml(euro(trip.budgetPerPerson)) + "</strong>",
+        '  <span>' + trip.seats + ' frei</span>',
+        "</div>"
+      ].join("")
+    });
+  }
+
+  function createTripPickerIcon() {
+    return window.L.divIcon({
+      className: "trip-map-marker",
+      iconSize: [92, 50],
+      iconAnchor: [46, 50],
+      html: [
+        '<div class="map-marker-bubble is-picker">',
+        "  <strong>Neu</strong>",
+        "  <span>Marker</span>",
+        "</div>"
+      ].join("")
+    });
+  }
+
+  function createTripsMap(containerId, summaryId) {
+    const container = document.getElementById(containerId);
+    const summary = document.getElementById(summaryId);
+
+    if (!container) {
+      return null;
+    }
+
+    if (!window.L) {
+      container.innerHTML = '<div class="map-fallback">Die Karte konnte lokal gerade nicht geladen werden.</div>';
+
+      if (summary) {
+        summary.textContent = "Karte aktuell nicht verfuegbar.";
+      }
+
+      return {
+        render: function () {}
+      };
+    }
+
+    const map = window.L.map(containerId, {
+      zoomControl: true,
+      scrollWheelZoom: true
+    }).setView([49.2, 10.6], 4);
+
+    window.L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    const markerLayer = window.L.layerGroup().addTo(map);
+
+    function fitMap(locationTrips) {
+      if (!locationTrips.length) {
+        map.setView([49.2, 10.6], 4);
+        return;
+      }
+
+      if (locationTrips.length === 1) {
+        map.setView([Number(locationTrips[0].lat), Number(locationTrips[0].lng)], 6);
+        return;
+      }
+
+      const bounds = window.L.latLngBounds(locationTrips.map(function (trip) {
+        return [Number(trip.lat), Number(trip.lng)];
+      }));
+
+      map.fitBounds(bounds.pad(0.22), {
+        maxZoom: 6
+      });
+    }
+
+    function render(trips) {
+      const locationTrips = trips.filter(hasTripLocation);
+
+      markerLayer.clearLayers();
+
+      locationTrips.forEach(function (trip) {
+        const marker = window.L.marker([Number(trip.lat), Number(trip.lng)], {
+          icon: tripMarkerIcon(trip),
+          title: trip.title
+        });
+
+        marker.bindPopup(tripMapPopupMarkup(trip));
+        marker.on("click", function () {
+          highlightTripCard(trip.id);
+        });
+        marker.addTo(markerLayer);
+      });
+
+      if (summary) {
+        summary.textContent = locationTrips.length + " Marker aktiv | " + trips.length + (trips.length === 1 ? " Trip im Feed" : " Trips im Feed");
+      }
+
+      fitMap(locationTrips);
+      window.setTimeout(function () {
+        map.invalidateSize();
+      }, 0);
+    }
+
+    window.addEventListener("resize", function () {
+      map.invalidateSize();
+    });
+
+    return {
+      render: render
+    };
+  }
+
+  function createTripPickerMap() {
+    const container = document.getElementById("createTripMap");
+    const latInput = document.querySelector('input[name="lat"]');
+    const lngInput = document.querySelector('input[name="lng"]');
+    const status = document.getElementById("mapSelectionStatus");
+    const resetButton = document.getElementById("resetCreateMap");
+
+    if (!container || !latInput || !lngInput || !status) {
+      return null;
+    }
+
+    function setStatus(text, isError) {
+      status.textContent = text;
+      status.classList.toggle("is-error", Boolean(isError));
+    }
+
+    if (!window.L) {
+      container.innerHTML = '<div class="map-fallback">Die Karte konnte lokal gerade nicht geladen werden.</div>';
+      setStatus("Leaflet ist gerade nicht verfuegbar.", true);
+      return {
+        reset: function () {}
+      };
+    }
+
+    const map = window.L.map("createTripMap", {
+      zoomControl: true,
+      scrollWheelZoom: true
+    }).setView([49.2, 10.6], 4);
+
+    window.L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    let marker = null;
+
+    function setMarker(lat, lng) {
+      const nextLat = Number(lat.toFixed(4));
+      const nextLng = Number(lng.toFixed(4));
+
+      if (!marker) {
+        marker = window.L.marker([nextLat, nextLng], {
+          icon: createTripPickerIcon()
+        }).addTo(map);
+      } else {
+        marker.setLatLng([nextLat, nextLng]);
+      }
+
+      latInput.value = String(nextLat);
+      lngInput.value = String(nextLng);
+      setStatus("Marker gesetzt bei " + nextLat + ", " + nextLng + ".", false);
+    }
+
+    function reset() {
+      if (marker) {
+        map.removeLayer(marker);
+        marker = null;
+      }
+
+      latInput.value = "";
+      lngInput.value = "";
+      map.setView([49.2, 10.6], 4);
+      setStatus("Noch kein Marker gesetzt.", false);
+    }
+
+    map.on("click", function (event) {
+      setMarker(event.latlng.lat, event.latlng.lng);
+    });
+
+    if (resetButton) {
+      resetButton.addEventListener("click", reset);
+    }
+
+    window.setTimeout(function () {
+      map.invalidateSize();
+    }, 0);
+
+    return {
+      reset: reset
+    };
+  }
+
   function smartContactPlan(trip) {
     const audiences = tripAudiences(trip);
 
@@ -197,7 +432,7 @@
     }).join(", ");
 
     return [
-      '<article class="trip-card card-surface">',
+      '<article class="trip-card card-surface" data-trip-id="' + escapeHtml(trip.id) + '">',
       '  <div class="trip-topline">',
       '    <span class="trip-chip trip-chip-route">' + escapeHtml(trip.startCity) + ' -> ' + escapeHtml(trip.destinationCity) + '</span>',
       '    <span class="status-pill">' + escapeHtml(trip.status) + '</span>',
@@ -213,6 +448,7 @@
       '    <span class="meta-pill">' + escapeHtml(trip.country) + '</span>',
       '    <span class="meta-pill">' + tripDays(trip) + ' Tage</span>',
       '    <span class="meta-pill">' + trip.seats + ' freie Plaetze</span>',
+      hasTripLocation(trip) ? '    <span class="meta-pill">Marker live</span>' : "",
       '    <span class="meta-pill">Startet als: ' + escapeHtml(groupTypeLabel(trip)) + '</span>',
       '    <span class="meta-pill">Zielgruppen: ' + safeAudiences + '</span>',
       '  </div>',
@@ -274,6 +510,7 @@
     const groupTypeSelect = document.getElementById("filterGroupType");
     const audienceButtons = Array.prototype.slice.call(document.querySelectorAll("[data-audience]"));
     const clearFiltersButton = document.getElementById("clearFilters");
+    const tripMap = createTripsMap("tripMap", "mapSummary");
     let activeAudience = "";
 
     function updateAudienceButtons(value) {
@@ -303,6 +540,11 @@
 
       setText("tripCount", filtered.length + (filtered.length === 1 ? " Reise" : " Reisen"));
       renderTrips("tripGrid", filtered);
+      highlightTripCard("");
+
+      if (tripMap) {
+        tripMap.render(filtered);
+      }
     }
 
     [destinationInput, budgetInput, styleSelect, groupTypeSelect].forEach(function (element) {
@@ -526,6 +768,7 @@
   function initCreatePage() {
     const form = document.getElementById("tripForm");
     const message = document.getElementById("createMessage");
+    const tripPicker = createTripPickerMap();
 
     if (!form || !message) {
       return;
@@ -543,6 +786,12 @@
         return;
       }
 
+      if (!data.get("lat") || !data.get("lng")) {
+        message.textContent = "Bitte setze einen Marker fuer die Zielregion.";
+        message.classList.add("is-error");
+        return;
+      }
+
       const trip = {
         id: "t" + Date.now(),
         hostId: "u1",
@@ -554,6 +803,8 @@
         endDate: data.get("endDate"),
         seats: Number(data.get("seats")),
         budgetPerPerson: Number(data.get("budgetPerPerson")),
+        lat: Number(data.get("lat")),
+        lng: Number(data.get("lng")),
         groupType: data.get("groupType"),
         audiences: selectedAudiences,
         styles: String(data.get("styles")).split(",").map(function (entry) {
@@ -566,6 +817,9 @@
 
       window.StorageApi.addTrip(trip);
       form.reset();
+      if (tripPicker) {
+        tripPicker.reset();
+      }
       message.classList.remove("is-error");
       message.textContent = 'Reise gespeichert. Du findest sie jetzt in "Reisen" und im Profil.';
     });
