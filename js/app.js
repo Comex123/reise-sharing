@@ -105,6 +105,34 @@
     return trip.groupType || "Offen";
   }
 
+  function tripTravelMode(trip) {
+    if (trip && (trip.travelMode === "solo" || trip.travelMode === "hybrid" || trip.travelMode === "shared")) {
+      return trip.travelMode;
+    }
+
+    return "shared";
+  }
+
+  function tripTravelModeLabel(trip) {
+    const labels = {
+      shared: "Gemeinsam",
+      solo: "Solo",
+      hybrid: "Solo + offen"
+    };
+
+    return labels[tripTravelMode(trip)] || "Gemeinsam";
+  }
+
+  function tripTravelModeHint(trip) {
+    const hints = {
+      shared: "Der Trip ist auf gemeinsames Reisen, Kontakt und Kostenteilung ausgelegt.",
+      solo: "Du kannst diesen Trip komplett alleine machen und die App nur fuer Planung, Sicherheit und Struktur nutzen.",
+      hybrid: "Du kannst solo starten und nur dann passende Leute dazunehmen, wenn es wirklich passt."
+    };
+
+    return hints[tripTravelMode(trip)] || hints.shared;
+  }
+
   function tripTimingMode(trip) {
     return trip && trip.timingMode === "flexible" ? "flexible" : "fixed";
   }
@@ -154,7 +182,7 @@
   }
 
   function createDefaultCostPlan(trip) {
-    const participantCount = Math.max(2, Number(trip.seats || 1) + 1);
+    const participantCount = tripTravelMode(trip) === "solo" ? 1 : Math.max(2, Number(trip.seats || 1) + 1);
     const total = Math.max(Number(trip.budgetPerPerson || 0) * participantCount, 0);
     const transport = Math.round(total * 0.24);
     const stay = Math.round(total * 0.5);
@@ -279,7 +307,7 @@
       '  <strong>' + escapeHtml(trip.title) + "</strong>",
       '  <p>' + escapeHtml(trip.destinationCity) + ", " + escapeHtml(trip.country) + "</p>",
       '  <p class="mini-note">' + escapeHtml(tripTimingRange(trip)) + "</p>",
-      '  <p class="mini-note">Mit ' + escapeHtml(host.name) + " | " + euro(trip.budgetPerPerson) + " | " + trip.seats + " freie Plaetze</p>",
+      '  <p class="mini-note">Mit ' + escapeHtml(host.name) + " | " + euro(trip.budgetPerPerson) + " | " + escapeHtml(tripTravelModeLabel(trip)) + "</p>",
       '  <a class="text-link" href="reise-detail.html?id=' + encodeURIComponent(trip.id) + '">Details ansehen</a>',
       "</div>"
     ].join("");
@@ -488,6 +516,19 @@
   function smartContactPlan(trip) {
     const audiences = tripAudiences(trip);
 
+    if (tripTravelMode(trip) === "solo") {
+      return {
+        recommendedMode: "app-chat",
+        title: "Kontakt nur wenn du willst",
+        description: "Der Trip ist solo ausgelegt. Du kannst die App auch nur fuer Struktur, Tipps oder spaeteren Kontakt nutzen.",
+        steps: [
+          "Die Reise funktioniert komplett ohne feste Gruppe.",
+          "Wenn du magst, startest du spaeter einen lockeren App-Chat.",
+          "Private Daten bleiben bis zu deinem Okay verborgen."
+        ]
+      };
+    }
+
     if (audiences.includes("Familien") || audiences.includes("Alleinerziehend") || groupTypeLabel(trip) === "Alleinerziehend") {
       return {
         recommendedMode: "fit-check",
@@ -565,6 +606,7 @@
       '  </div>',
       '  <div class="trip-meta">',
       '    <span class="meta-pill">' + escapeHtml(trip.country) + '</span>',
+      '    <span class="meta-pill">' + escapeHtml(tripTravelModeLabel(trip)) + '</span>',
       '    <span class="meta-pill">' + escapeHtml(tripTimingLabel(trip)) + '</span>',
       '    <span class="meta-pill">' + escapeHtml(tripPlanningLabel(trip)) + '</span>',
       '    <span class="meta-pill">' + trip.seats + ' freie Plaetze</span>',
@@ -630,6 +672,7 @@
     const styleSelect = document.getElementById("filterStyle");
     const groupTypeSelect = document.getElementById("filterGroupType");
     const timingSelect = document.getElementById("filterTiming");
+    const travelModeSelect = document.getElementById("filterTravelMode");
     const audienceButtons = Array.prototype.slice.call(document.querySelectorAll("[data-audience]"));
     const clearFiltersButton = document.getElementById("clearFilters");
     const tripMap = createTripsMap("tripMap", "mapSummary");
@@ -650,6 +693,7 @@
       const style = styleSelect.value;
       const groupType = groupTypeSelect.value;
       const timingMode = timingSelect.value;
+      const travelMode = travelModeSelect.value;
       const selectedAudience = activeAudience;
       const filtered = getTrips().filter(function (trip) {
         const destinationText = [trip.destinationCity, trip.country, trip.startCity].join(" ").toLowerCase();
@@ -658,8 +702,9 @@
         const matchesStyle = !style || trip.styles.includes(style);
         const matchesGroupType = !groupType || groupTypeLabel(trip) === groupType;
         const matchesTiming = !timingMode || tripTimingMode(trip) === timingMode;
+        const matchesTravelMode = !travelMode || tripTravelMode(trip) === travelMode;
         const matchesAudience = !selectedAudience || tripAudiences(trip).includes(selectedAudience);
-        return matchesDestination && matchesBudget && matchesStyle && matchesGroupType && matchesTiming && matchesAudience;
+        return matchesDestination && matchesBudget && matchesStyle && matchesGroupType && matchesTiming && matchesTravelMode && matchesAudience;
       });
 
       setText("tripCount", filtered.length + (filtered.length === 1 ? " Reise" : " Reisen"));
@@ -671,7 +716,7 @@
       }
     }
 
-    [destinationInput, budgetInput, styleSelect, groupTypeSelect, timingSelect].forEach(function (element) {
+    [destinationInput, budgetInput, styleSelect, groupTypeSelect, timingSelect, travelModeSelect].forEach(function (element) {
       element.addEventListener("input", applyFilters);
       element.addEventListener("change", applyFilters);
     });
@@ -690,6 +735,7 @@
         styleSelect.value = "";
         groupTypeSelect.value = "";
         timingSelect.value = "";
+        travelModeSelect.value = "";
         updateAudienceButtons("");
         applyFilters();
       });
@@ -758,6 +804,10 @@
       '      <p class="trip-copy"><strong>' + escapeHtml(tripTimingLabel(trip)) + "</strong> - " + escapeHtml(tripPlanningLabel(trip)) + "</p>",
       "    </div>",
       '    <div>',
+      '      <p class="eyebrow">Reiseoption</p>',
+      '      <p class="trip-copy"><strong>' + escapeHtml(tripTravelModeLabel(trip)) + "</strong> - " + escapeHtml(tripTravelModeHint(trip)) + "</p>",
+      "    </div>",
+      '    <div>',
       '      <p class="eyebrow">Zielgruppen</p>',
       '      <div class="detail-stats">' + audienceMarkup + "</div>",
       "    </div>",
@@ -794,7 +844,7 @@
       "    </form>",
       "  </section>",
       '  <div class="trip-actions">',
-      '    <button class="button button-primary" type="button" id="requestButton">Smart Connect starten</button>',
+      '    <button class="button button-primary" type="button" id="requestButton">' + escapeHtml(tripTravelMode(trip) === "solo" ? "Optionalen Kontakt starten" : "Smart Connect starten") + "</button>",
       '    <a class="button button-secondary" href="reisen.html">Zurueck zur Liste</a>',
       "  </div>",
       "</article>",
@@ -996,6 +1046,8 @@
     const tripPicker = createTripPickerMap();
     const timingModeSelect = document.getElementById("timingModeSelect");
     const timingHint = document.getElementById("timingHint");
+    const travelModeSelect = document.getElementById("travelModeSelect");
+    const travelModeHint = document.getElementById("travelModeHint");
     const startLabel = form ? form.querySelector('input[name="startDate"]').previousElementSibling : null;
     const endLabel = form ? form.querySelector('input[name="endDate"]').previousElementSibling : null;
 
@@ -1023,6 +1075,29 @@
     if (timingModeSelect) {
       timingModeSelect.addEventListener("change", updateTimingUi);
       updateTimingUi();
+    }
+
+    function updateTravelModeUi() {
+      if (!travelModeSelect || !travelModeHint) {
+        return;
+      }
+
+      if (travelModeSelect.value === "solo") {
+        travelModeHint.textContent = "Der Trip kann komplett alleine stattfinden. Die App hilft eher bei Planung, Sicherheit und Struktur.";
+        return;
+      }
+
+      if (travelModeSelect.value === "hybrid") {
+        travelModeHint.textContent = "Du kannst solo starten und nur dann passende Leute dazunehmen, wenn sich wirklich ein guter Match ergibt.";
+        return;
+      }
+
+      travelModeHint.textContent = "Der Trip ist auf gemeinsames Reisen und Kostenteilung ausgelegt.";
+    }
+
+    if (travelModeSelect) {
+      travelModeSelect.addEventListener("change", updateTravelModeUi);
+      updateTravelModeUi();
     }
 
     form.addEventListener("submit", function (event) {
@@ -1053,6 +1128,7 @@
         startDate: data.get("startDate"),
         endDate: data.get("endDate"),
         timingMode: data.get("timingMode"),
+        travelMode: data.get("travelMode"),
         seats: Number(data.get("seats")),
         budgetPerPerson: Number(data.get("budgetPerPerson")),
         lat: Number(data.get("lat")),
@@ -1073,6 +1149,7 @@
         tripPicker.reset();
       }
       updateTimingUi();
+      updateTravelModeUi();
       message.classList.remove("is-error");
       message.textContent = 'Reise gespeichert. Du findest sie jetzt in "Reisen" und im Profil.';
     });

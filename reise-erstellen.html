@@ -108,6 +108,14 @@
             </select>
           </label>
           <label>
+            <span>Reiseoption</span>
+            <select name="travelMode" id="travelModeSelect">
+              <option value="shared">Gemeinsam reisen</option>
+              <option value="solo">Solo reisen</option>
+              <option value="hybrid">Solo starten, offen fuer passende Leute</option>
+            </select>
+          </label>
+          <label>
             <span>Kontakt sichtbar ab</span>
             <select name="contactUnlock">
               <option value="after-approval">Nach Bestaetigung</option>
@@ -117,6 +125,7 @@
         </div>
 
         <p id="timingHint" class="mini-note form-inline-note">Du stellst einen Trip mit festen Daten ein.</p>
+        <p id="travelModeHint" class="mini-note form-inline-note">Der Trip ist auf gemeinsames Reisen und Kostenteilung ausgelegt.</p>
 
         <fieldset class="choice-group">
           <legend>Zielgruppen</legend>
