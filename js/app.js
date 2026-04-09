@@ -55,6 +55,10 @@
     return window.StorageApi.getTrips();
   }
 
+  function getStays() {
+    return window.AppData.stays || [];
+  }
+
   function getProfile() {
     return window.StorageApi.getProfile();
   }
@@ -103,6 +107,54 @@
 
   function groupTypeLabel(trip) {
     return trip.groupType || "Offen";
+  }
+
+  function tripListingType(trip) {
+    return trip && trip.listingType === "request" ? "request" : "offer";
+  }
+
+  function tripListingLabel(trip) {
+    return tripListingType(trip) === "request" ? "Anfrage" : "Angebot";
+  }
+
+  function tripOriginLabel(trip) {
+    return trip && trip.startCity ? trip.startCity : "Start offen";
+  }
+
+  function tripDestinationLabel(trip) {
+    if (trip && trip.destinationCity) {
+      return trip.destinationCity;
+    }
+
+    if (trip && trip.regionLabel) {
+      return trip.regionLabel;
+    }
+
+    if (trip && trip.country) {
+      return trip.country;
+    }
+
+    return "Ziel offen";
+  }
+
+  function tripRouteLabel(trip) {
+    return tripOriginLabel(trip) + " -> " + tripDestinationLabel(trip);
+  }
+
+  function tripSeatLabel(trip) {
+    if (tripListingType(trip) === "request") {
+      return trip.seats + (trip.seats === 1 ? " passender Match gesucht" : " passende Matches gesucht");
+    }
+
+    return trip.seats + " freie Plaetze";
+  }
+
+  function tripListingHint(trip) {
+    if (tripListingType(trip) === "request") {
+      return "Offene Reiseanfrage mit flexiblen Details";
+    }
+
+    return "Konkretes Angebot mit sichtbaren Reisedaten";
   }
 
   function tripTravelMode(trip) {
@@ -154,6 +206,10 @@
   }
 
   function tripPlanningLabel(trip) {
+    if (tripListingType(trip) === "request") {
+      return "Ziel und genauer Ablauf werden noch abgestimmt";
+    }
+
     if (tripTimingMode(trip) === "flexible") {
       return "Termin wird gemeinsam festgelegt";
     }
@@ -303,9 +359,9 @@
 
     return [
       '<div class="trip-map-popup">',
-      '  <p class="eyebrow">Live Angebot</p>',
+      '  <p class="eyebrow">' + escapeHtml(tripListingLabel(trip)) + "</p>",
       '  <strong>' + escapeHtml(trip.title) + "</strong>",
-      '  <p>' + escapeHtml(trip.destinationCity) + ", " + escapeHtml(trip.country) + "</p>",
+      '  <p>' + escapeHtml(tripDestinationLabel(trip)) + ", " + escapeHtml(trip.country) + "</p>",
       '  <p class="mini-note">' + escapeHtml(tripTimingRange(trip)) + "</p>",
       '  <p class="mini-note">Mit ' + escapeHtml(host.name) + " | " + euro(trip.budgetPerPerson) + " | " + escapeHtml(tripTravelModeLabel(trip)) + "</p>",
       '  <a class="text-link" href="reise-detail.html?id=' + encodeURIComponent(trip.id) + '">Details ansehen</a>',
@@ -314,15 +370,52 @@
   }
 
   function tripMarkerIcon(trip) {
+    const isRequest = tripListingType(trip) === "request";
+
     return window.L.divIcon({
       className: "trip-map-marker",
-      iconSize: [92, 50],
-      iconAnchor: [46, 50],
+      iconSize: isRequest ? [104, 52] : [92, 50],
+      iconAnchor: isRequest ? [52, 52] : [46, 50],
       popupAnchor: [0, -44],
       html: [
-        '<div class="map-marker-bubble">',
-        '  <strong>' + escapeHtml(euro(trip.budgetPerPerson)) + "</strong>",
-        '  <span>' + trip.seats + ' frei</span>',
+        '<div class="map-marker-bubble' + (isRequest ? " is-request" : "") + '">',
+        '  <strong>' + escapeHtml(isRequest ? "Anfrage" : euro(trip.budgetPerPerson)) + "</strong>",
+        '  <span>' + escapeHtml(isRequest ? tripDestinationLabel(trip) : tripSeatLabel(trip)) + "</span>",
+        "</div>"
+      ].join("")
+    });
+  }
+
+  function stayPopupMarkup(stay) {
+    const linkedTrips = (stay.requestTripIds || []).map(function (tripId) {
+      return getTripById(tripId);
+    }).filter(Boolean);
+    const linkedTripMarkup = linkedTrips.slice(0, 2).map(function (trip) {
+      return '<span class="meta-pill">' + escapeHtml(tripListingLabel(trip) + ": " + tripDestinationLabel(trip)) + "</span>";
+    }).join("");
+
+    return [
+      '<div class="trip-map-popup">',
+      '  <p class="eyebrow">Stay Signal</p>',
+      '  <strong>' + escapeHtml(stay.name) + "</strong>",
+      '  <p>' + escapeHtml(stay.city) + ", " + escapeHtml(stay.country) + "</p>",
+      '  <p class="mini-note">' + escapeHtml(stay.type) + " | ab " + euro(stay.nightlyPrice) + " pro Nacht</p>",
+      '  <p class="mini-note">' + stay.requestTripIds.length + (stay.requestTripIds.length === 1 ? " passender MatchTrip sichtbar" : " passende MatchTrips sichtbar") + "</p>",
+      linkedTripMarkup ? '  <div class="trip-tags">' + linkedTripMarkup + "</div>" : "",
+      "</div>"
+    ].join("");
+  }
+
+  function stayMarkerIcon(stay) {
+    return window.L.divIcon({
+      className: "trip-map-marker",
+      iconSize: [100, 52],
+      iconAnchor: [50, 52],
+      popupAnchor: [0, -44],
+      html: [
+        '<div class="map-marker-bubble is-stay">',
+        '  <strong>' + escapeHtml("ab " + euro(stay.nightlyPrice)) + "</strong>",
+        '  <span>' + stay.requestTripIds.length + " Signals</span>",
         "</div>"
       ].join("")
     });
@@ -374,19 +467,19 @@
 
     const markerLayer = window.L.layerGroup().addTo(map);
 
-    function fitMap(locationTrips) {
-      if (!locationTrips.length) {
+    function fitMap(points) {
+      if (!points.length) {
         map.setView([49.2, 10.6], 4);
         return;
       }
 
-      if (locationTrips.length === 1) {
-        map.setView([Number(locationTrips[0].lat), Number(locationTrips[0].lng)], 6);
+      if (points.length === 1) {
+        map.setView([Number(points[0].lat), Number(points[0].lng)], 6);
         return;
       }
 
-      const bounds = window.L.latLngBounds(locationTrips.map(function (trip) {
-        return [Number(trip.lat), Number(trip.lng)];
+      const bounds = window.L.latLngBounds(points.map(function (point) {
+        return [Number(point.lat), Number(point.lng)];
       }));
 
       map.fitBounds(bounds.pad(0.22), {
@@ -394,8 +487,22 @@
       });
     }
 
-    function render(trips) {
+    function render(trips, filters) {
       const locationTrips = trips.filter(hasTripLocation);
+      const destination = filters && filters.destination ? filters.destination : "";
+      const style = filters && filters.style ? filters.style : "";
+      const visibleTripIds = trips.map(function (trip) {
+        return trip.id;
+      });
+      const visibleStays = getStays().filter(function (stay) {
+        const stayText = [stay.name, stay.city, stay.region, stay.country].join(" ").toLowerCase();
+        const matchesDestination = !destination || stayText.includes(destination);
+        const matchesStyle = !style || (Array.isArray(stay.vibes) && stay.vibes.includes(style));
+        const matchesTrips = !visibleTripIds.length || (stay.requestTripIds || []).some(function (tripId) {
+          return visibleTripIds.includes(tripId);
+        });
+        return matchesDestination && matchesStyle && matchesTrips;
+      });
 
       markerLayer.clearLayers();
 
@@ -412,11 +519,25 @@
         marker.addTo(markerLayer);
       });
 
+      visibleStays.forEach(function (stay) {
+        const marker = window.L.marker([Number(stay.lat), Number(stay.lng)], {
+          icon: stayMarkerIcon(stay),
+          title: stay.name
+        });
+
+        marker.bindPopup(stayPopupMarkup(stay));
+        marker.addTo(markerLayer);
+      });
+
       if (summary) {
-        summary.textContent = locationTrips.length + " Marker aktiv | " + trips.length + (trips.length === 1 ? " Trip im Feed" : " Trips im Feed");
+        const requestCount = trips.filter(function (trip) {
+          return tripListingType(trip) === "request";
+        }).length;
+        const offerCount = trips.length - requestCount;
+        summary.textContent = offerCount + " Angebote | " + requestCount + " Anfragen | " + visibleStays.length + " Ferienhaeuser";
       }
 
-      fitMap(locationTrips);
+      fitMap(locationTrips.concat(visibleStays));
       window.setTimeout(function () {
         map.invalidateSize();
       }, 0);
@@ -516,6 +637,19 @@
   function smartContactPlan(trip) {
     const audiences = tripAudiences(trip);
 
+    if (tripListingType(trip) === "request") {
+      return {
+        recommendedMode: "app-chat",
+        title: "Offene Anfrage zuerst sortieren",
+        description: "Noch bevor alles feststeht, kann der erste Kontakt locker und anonym starten.",
+        steps: [
+          "Zuerst nur grobe Region, Zeitraum und Vibe teilen.",
+          "Dann gemeinsam schauen, ob Ort und Unterkunft ueberhaupt zusammenpassen.",
+          "Private Daten erst nach einem echten Match freigeben."
+        ]
+      };
+    }
+
     if (tripTravelMode(trip) === "solo") {
       return {
         recommendedMode: "app-chat",
@@ -592,9 +726,10 @@
     }).join(", ");
 
     return [
-      '<article class="trip-card card-surface" data-trip-id="' + escapeHtml(trip.id) + '">',
+      '<article class="trip-card card-surface" data-trip-id="' + escapeHtml(trip.id) + '" data-listing-type="' + escapeHtml(tripListingType(trip)) + '">',
       '  <div class="trip-topline">',
-      '    <span class="trip-chip trip-chip-route">' + escapeHtml(trip.startCity) + ' -> ' + escapeHtml(trip.destinationCity) + '</span>',
+      '    <span class="trip-chip trip-chip-kind' + (tripListingType(trip) === "request" ? " trip-chip-request" : " trip-chip-offer") + '">' + escapeHtml(tripListingLabel(trip)) + '</span>',
+      '    <span class="trip-chip trip-chip-route">' + escapeHtml(tripRouteLabel(trip)) + '</span>',
       '    <span class="status-pill">' + escapeHtml(trip.status) + '</span>',
       '  </div>',
       '  <div class="trip-title-row">',
@@ -606,22 +741,23 @@
       '  </div>',
       '  <div class="trip-meta">',
       '    <span class="meta-pill">' + escapeHtml(trip.country) + '</span>',
+      trip.regionLabel ? '    <span class="meta-pill">Region: ' + escapeHtml(trip.regionLabel) + "</span>" : "",
       '    <span class="meta-pill">' + escapeHtml(tripTravelModeLabel(trip)) + '</span>',
       '    <span class="meta-pill">' + escapeHtml(tripTimingLabel(trip)) + '</span>',
       '    <span class="meta-pill">' + escapeHtml(tripPlanningLabel(trip)) + '</span>',
-      '    <span class="meta-pill">' + trip.seats + ' freie Plaetze</span>',
+      '    <span class="meta-pill">' + escapeHtml(tripSeatLabel(trip)) + '</span>',
       hasTripLocation(trip) ? '    <span class="meta-pill">Marker live</span>' : "",
-      costPlan ? '    <span class="meta-pill">Kostenplan live: ' + escapeHtml(euro(costPerPerson(normalizeCostPlan(costPlan, trip)))) + "</span>" : "",
+      costPlan && tripListingType(trip) !== "request" ? '    <span class="meta-pill">Kostenplan live: ' + escapeHtml(euro(costPerPerson(normalizeCostPlan(costPlan, trip)))) + "</span>" : "",
       '    <span class="meta-pill">Startet als: ' + escapeHtml(groupTypeLabel(trip)) + '</span>',
       '    <span class="meta-pill">Zielgruppen: ' + safeAudiences + '</span>',
       '  </div>',
       '  <p class="trip-copy">' + escapeHtml(excerpt(trip.notes, 90)) + '</p>',
       '  <div class="trip-card-footer">',
       '    <div class="trip-tags">' + safeStyles + '</div>',
-      '    <p class="trip-host">Mit ' + escapeHtml(host.name) + ' - Kontakt ' + escapeHtml(unlockLabel(trip.contactUnlock)) + '</p>',
+      '    <p class="trip-host">Mit ' + escapeHtml(host.name) + ' - ' + escapeHtml(tripListingHint(trip)) + '</p>',
       '  </div>',
       '  <div class="trip-actions">',
-      '    <a class="button button-primary" href="reise-detail.html?id=' + safeId + '">Details ansehen</a>',
+      '    <a class="button button-primary" href="reise-detail.html?id=' + safeId + '">' + escapeHtml(tripListingType(trip) === "request" ? "Anfrage ansehen" : "Details ansehen") + '</a>',
       '  </div>',
       '</article>'
     ].join("");
@@ -673,6 +809,7 @@
     const groupTypeSelect = document.getElementById("filterGroupType");
     const timingSelect = document.getElementById("filterTiming");
     const travelModeSelect = document.getElementById("filterTravelMode");
+    const listingTypeSelect = document.getElementById("filterListingType");
     const audienceButtons = Array.prototype.slice.call(document.querySelectorAll("[data-audience]"));
     const clearFiltersButton = document.getElementById("clearFilters");
     const tripMap = createTripsMap("tripMap", "mapSummary");
@@ -694,17 +831,19 @@
       const groupType = groupTypeSelect.value;
       const timingMode = timingSelect.value;
       const travelMode = travelModeSelect.value;
+      const listingType = listingTypeSelect.value;
       const selectedAudience = activeAudience;
       const filtered = getTrips().filter(function (trip) {
-        const destinationText = [trip.destinationCity, trip.country, trip.startCity].join(" ").toLowerCase();
+        const destinationText = [trip.destinationCity, trip.regionLabel, trip.country, trip.startCity].join(" ").toLowerCase();
         const matchesDestination = !destination || destinationText.includes(destination);
         const matchesBudget = !budget || Number(trip.budgetPerPerson) <= budget;
         const matchesStyle = !style || trip.styles.includes(style);
         const matchesGroupType = !groupType || groupTypeLabel(trip) === groupType;
         const matchesTiming = !timingMode || tripTimingMode(trip) === timingMode;
         const matchesTravelMode = !travelMode || tripTravelMode(trip) === travelMode;
+        const matchesListingType = !listingType || tripListingType(trip) === listingType;
         const matchesAudience = !selectedAudience || tripAudiences(trip).includes(selectedAudience);
-        return matchesDestination && matchesBudget && matchesStyle && matchesGroupType && matchesTiming && matchesTravelMode && matchesAudience;
+        return matchesDestination && matchesBudget && matchesStyle && matchesGroupType && matchesTiming && matchesTravelMode && matchesListingType && matchesAudience;
       });
 
       setText("tripCount", filtered.length + (filtered.length === 1 ? " MatchTrip" : " MatchTrips"));
@@ -712,11 +851,14 @@
       highlightTripCard("");
 
       if (tripMap) {
-        tripMap.render(filtered);
+        tripMap.render(filtered, {
+          destination: destination,
+          style: style
+        });
       }
     }
 
-    [destinationInput, budgetInput, styleSelect, groupTypeSelect, timingSelect, travelModeSelect].forEach(function (element) {
+    [destinationInput, budgetInput, styleSelect, groupTypeSelect, timingSelect, travelModeSelect, listingTypeSelect].forEach(function (element) {
       element.addEventListener("input", applyFilters);
       element.addEventListener("change", applyFilters);
     });
@@ -736,6 +878,7 @@
         groupTypeSelect.value = "";
         timingSelect.value = "";
         travelModeSelect.value = "";
+        listingTypeSelect.value = "";
         updateAudienceButtons("");
         applyFilters();
       });
@@ -774,22 +917,23 @@
 
     target.innerHTML = [
       '<article class="detail-card card-surface">',
-      '  <p class="eyebrow">Oeffentliche Reiseinfos</p>',
+      '  <p class="eyebrow">' + escapeHtml(tripListingType(trip) === "request" ? "Oeffentliche Anfrage" : "Oeffentliche Reiseinfos") + "</p>",
       '  <div class="detail-route-hero">',
-      '    <span class="trip-chip trip-chip-route">' + escapeHtml(trip.startCity) + ' -> ' + escapeHtml(trip.destinationCity) + "</span>",
+      '    <span class="trip-chip trip-chip-route">' + escapeHtml(tripRouteLabel(trip)) + "</span>",
       '    <span class="status-pill">' + escapeHtml(trip.status) + "</span>",
       "  </div>",
       '  <div class="trip-title-row">',
       '    <div>',
       '      <h2>' + escapeHtml(trip.title) + '</h2>',
-      '      <p class="lead">' + escapeHtml(trip.startCity) + ' -> ' + escapeHtml(trip.destinationCity) + ", " + escapeHtml(trip.country) + "</p>",
+      '      <p class="lead">' + escapeHtml(tripOriginLabel(trip)) + ' -> ' + escapeHtml(tripDestinationLabel(trip)) + ", " + escapeHtml(trip.country) + "</p>",
       '    </div>',
       '    <strong>' + euro(trip.budgetPerPerson) + '</strong>',
       '  </div>',
       '  <div class="detail-signal-grid">',
       '    <article class="detail-signal"><span>Zeitraum</span><strong>' + escapeHtml(tripTimingRange(trip)) + "</strong></article>",
       '    <article class="detail-signal"><span>Planung</span><strong>' + escapeHtml(tripPlanningLabel(trip)) + "</strong></article>",
-      '    <article class="detail-signal"><span>Freie Plaetze</span><strong>' + trip.seats + "</strong></article>",
+      '    <article class="detail-signal"><span>Typ</span><strong>' + escapeHtml(tripListingLabel(trip)) + "</strong></article>",
+      '    <article class="detail-signal"><span>Matchs</span><strong>' + escapeHtml(tripSeatLabel(trip)) + "</strong></article>",
       '    <article class="detail-signal"><span>Kontakt</span><strong>' + escapeHtml(unlockLabel(trip.contactUnlock)) + "</strong></article>",
       "  </div>",
       '  <p class="trip-copy">' + escapeHtml(trip.notes) + "</p>",
@@ -804,6 +948,10 @@
       '      <p class="trip-copy"><strong>' + escapeHtml(tripTimingLabel(trip)) + "</strong> - " + escapeHtml(tripPlanningLabel(trip)) + "</p>",
       "    </div>",
       '    <div>',
+      '      <p class="eyebrow">Anfragegrad</p>',
+      '      <p class="trip-copy"><strong>' + escapeHtml(tripListingLabel(trip)) + "</strong> - " + escapeHtml(tripListingHint(trip)) + "</p>",
+      "    </div>",
+      '    <div>',
       '      <p class="eyebrow">Reiseoption</p>',
       '      <p class="trip-copy"><strong>' + escapeHtml(tripTravelModeLabel(trip)) + "</strong> - " + escapeHtml(tripTravelModeHint(trip)) + "</p>",
       "    </div>",
@@ -816,7 +964,7 @@
       '    <div class="app-section-header compact-header">',
       '      <div>',
       '        <p class="eyebrow">Kostenklarheit</p>',
-      '        <h3>Kostenteilung direkt in der App</h3>',
+      '        <h3>' + escapeHtml(tripListingType(trip) === "request" ? "Budgetrahmen direkt in der App" : "Kostenteilung direkt in der App") + '</h3>',
       "      </div>",
       '      <span class="status-pill" id="costPlanStatusValue">' + escapeHtml(costPlan.status) + "</span>",
       "    </div>",
@@ -844,7 +992,7 @@
       "    </form>",
       "  </section>",
       '  <div class="trip-actions">',
-      '    <button class="button button-primary" type="button" id="requestButton">' + escapeHtml(tripTravelMode(trip) === "solo" ? "Optionalen Connect starten" : "Connect starten") + "</button>",
+      '    <button class="button button-primary" type="button" id="requestButton">' + escapeHtml(tripListingType(trip) === "request" ? "Auf Anfrage reagieren" : (tripTravelMode(trip) === "solo" ? "Optionalen Connect starten" : "Connect starten")) + "</button>",
       '    <a class="button button-secondary" href="reisen.html">Zurueck zur Liste</a>',
       "  </div>",
       "</article>",
@@ -862,17 +1010,17 @@
       "  <div>",
       '    <p class="eyebrow">Jetzt sichtbar</p>',
       '    <ul class="privacy-list">',
-      "      <li>Startstadt und Ziel</li>",
-      "      <li>Datum, Budget und Reisestil</li>",
+      tripListingType(trip) === "request" ? "      <li>Startregion, Zeitraum und Budgetrahmen</li>" : "      <li>Startstadt und Ziel</li>",
+      tripListingType(trip) === "request" ? "      <li>Vibe, Zielgruppen und grobe Wunschregion</li>" : "      <li>Datum, Budget und Reisestil</li>",
       "      <li>Kurze persoenliche Beschreibung</li>",
       "    </ul>",
       "  </div>",
       "  <div>",
       '    <p class="eyebrow">Noch verborgen</p>',
       '    <ul class="privacy-list">',
-      "      <li>Telefonnummer</li>",
-      "      <li>Genaue Unterkunft</li>",
-      "      <li>Treffpunkt und private Kontaktdaten</li>",
+      tripListingType(trip) === "request" ? "      <li>Exakter Ort und finale Unterkunft</li>" : "      <li>Telefonnummer</li>",
+      tripListingType(trip) === "request" ? "      <li>Telefonnummer und private Kontaktdaten</li>" : "      <li>Genaue Unterkunft</li>",
+      tripListingType(trip) === "request" ? "      <li>Treffpunkt und persoenliche Routendetails</li>" : "      <li>Treffpunkt und private Kontaktdaten</li>",
       "    </ul>",
       "  </div>",
       '  <div class="smart-contact-shell">',
@@ -977,11 +1125,13 @@
       });
     });
 
-    requestButton.addEventListener("click", function () {
-      if (smartForm) {
-        smartForm.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    });
+    if (requestButton) {
+      requestButton.addEventListener("click", function () {
+        if (smartForm) {
+          smartForm.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    }
 
     if (costPlanForm) {
       updateCostPlanPreview(costPlan);
@@ -1048,6 +1198,14 @@
     const timingHint = document.getElementById("timingHint");
     const travelModeSelect = document.getElementById("travelModeSelect");
     const travelModeHint = document.getElementById("travelModeHint");
+    const listingTypeSelect = document.getElementById("listingTypeSelect");
+    const listingTypeHint = document.getElementById("listingTypeHint");
+    const destinationInput = form ? form.querySelector('input[name="destinationCity"]') : null;
+    const countryInput = form ? form.querySelector('input[name="country"]') : null;
+    const destinationLabel = destinationInput ? destinationInput.previousElementSibling : null;
+    const countryLabel = countryInput ? countryInput.previousElementSibling : null;
+    const seatsInput = form ? form.querySelector('input[name="seats"]') : null;
+    const seatsLabel = seatsInput ? seatsInput.previousElementSibling : null;
     const startLabel = form ? form.querySelector('input[name="startDate"]').previousElementSibling : null;
     const endLabel = form ? form.querySelector('input[name="endDate"]').previousElementSibling : null;
 
@@ -1100,6 +1258,51 @@
       updateTravelModeUi();
     }
 
+    function updateListingTypeUi() {
+      if (!listingTypeSelect || !listingTypeHint || !destinationInput || !destinationLabel || !countryLabel || !seatsInput || !seatsLabel) {
+        return;
+      }
+
+      if (listingTypeSelect.value === "request") {
+        destinationInput.required = false;
+        destinationInput.placeholder = "optional z. B. Amsterdam";
+        if (countryInput) {
+          countryInput.placeholder = "z. B. Holland oder Niederlande";
+        }
+        destinationLabel.textContent = "Zielort optional";
+        countryLabel.textContent = "Land oder Region";
+        seatsLabel.textContent = "Wie viele passende Leute suchst du?";
+        listingTypeHint.textContent = "Du stellst eine offene Anfrage ein. Zeitraum darf flexibel sein und der genaue Zielort kann spaeter entstehen.";
+
+        if (timingModeSelect) {
+          timingModeSelect.value = "flexible";
+          updateTimingUi();
+        }
+
+        if (travelModeSelect) {
+          travelModeSelect.value = "hybrid";
+          updateTravelModeUi();
+        }
+
+        return;
+      }
+
+      destinationInput.required = true;
+      destinationInput.placeholder = "Prag";
+      if (countryInput) {
+        countryInput.placeholder = "Tschechien";
+      }
+      destinationLabel.textContent = "Zielort";
+      countryLabel.textContent = "Land";
+      seatsLabel.textContent = "Freie Plaetze";
+      listingTypeHint.textContent = "Du stellst ein konkretes Angebot mit Region, Daten und Match-Option ein.";
+    }
+
+    if (listingTypeSelect) {
+      listingTypeSelect.addEventListener("change", updateListingTypeUi);
+      updateListingTypeUi();
+    }
+
     form.addEventListener("submit", function (event) {
       event.preventDefault();
 
@@ -1108,6 +1311,12 @@
 
       if (!selectedAudiences.length) {
         message.textContent = "Bitte waehle mindestens eine Zielgruppe aus.";
+        message.classList.add("is-error");
+        return;
+      }
+
+      if (listingTypeSelect && listingTypeSelect.value !== "request" && !String(data.get("destinationCity") || "").trim()) {
+        message.textContent = "Bitte gib fuer ein Angebot einen Zielort an.";
         message.classList.add("is-error");
         return;
       }
@@ -1121,9 +1330,11 @@
       const trip = {
         id: "t" + Date.now(),
         hostId: "u1",
+        listingType: data.get("listingType") || "offer",
         title: String(data.get("title")).trim(),
         startCity: String(data.get("startCity")).trim(),
         destinationCity: String(data.get("destinationCity")).trim(),
+        regionLabel: (data.get("listingType") === "request" ? String(data.get("country")).trim() : ""),
         country: String(data.get("country")).trim(),
         startDate: data.get("startDate"),
         endDate: data.get("endDate"),
@@ -1140,7 +1351,7 @@
         }).filter(Boolean),
         notes: String(data.get("notes")).trim(),
         contactUnlock: data.get("contactUnlock"),
-        status: "Offen"
+        status: data.get("listingType") === "request" ? "Anfrage offen" : "Offen"
       };
 
       window.StorageApi.addTrip(trip);
@@ -1150,8 +1361,11 @@
       }
       updateTimingUi();
       updateTravelModeUi();
+      updateListingTypeUi();
       message.classList.remove("is-error");
-      message.textContent = 'MatchTrip gespeichert. Du findest ihn jetzt unter "Entdecken" und im Profil.';
+      message.textContent = data.get("listingType") === "request"
+        ? 'Anfrage gespeichert. Sie ist jetzt auf der Karte, unter "Entdecken" und im Profil sichtbar.'
+        : 'MatchTrip gespeichert. Du findest ihn jetzt unter "Entdecken" und im Profil.';
     });
   }
 
@@ -1185,13 +1399,19 @@
     });
 
     if (!ownTrips.length) {
-      renderEmptyList(hostedTrips, "Noch keine eigenen Reisen angelegt.");
+      renderEmptyList(hostedTrips, "Noch keine eigenen MatchTrips angelegt.");
     } else {
       hostedTrips.innerHTML = ownTrips.map(function (trip) {
         return [
           '<div class="stack-item">',
+          '  <div class="trip-topline">',
+          '    <span class="trip-chip trip-chip-kind' + (tripListingType(trip) === "request" ? " trip-chip-request" : " trip-chip-offer") + '">' + escapeHtml(tripListingLabel(trip)) + "</span>",
+          '    <span class="status-pill">' + escapeHtml(trip.status) + "</span>",
+          "  </div>",
           "  <strong>" + escapeHtml(trip.title) + "</strong>",
-          '  <p class="trip-copy">' + escapeHtml(trip.startCity) + " -> " + escapeHtml(trip.destinationCity) + " | " + escapeHtml(tripTimingRange(trip)) + "</p>",
+          '  <p class="trip-copy stack-item-route">' + escapeHtml(tripRouteLabel(trip)) + " | " + escapeHtml(tripTimingRange(trip)) + "</p>",
+          '  <p class="mini-note stack-item-copy">' + escapeHtml(tripListingHint(trip)) + " | " + escapeHtml(tripSeatLabel(trip)) + "</p>",
+          trip.regionLabel ? '  <p class="mini-note stack-item-copy">Region: ' + escapeHtml(trip.regionLabel) + " | " + escapeHtml(trip.country) + "</p>" : '  <p class="mini-note stack-item-copy">' + escapeHtml(trip.country) + " | " + escapeHtml(tripTravelModeLabel(trip)) + "</p>",
           '  <a class="text-link" href="reise-detail.html?id=' + encodeURIComponent(trip.id) + '">Zur Detailseite</a>',
           "</div>"
         ].join("");

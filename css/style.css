@@ -514,6 +514,19 @@ button {
   background: var(--gold-soft);
 }
 
+.trip-chip-kind {
+  color: var(--white);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.trip-chip-request {
+  background: linear-gradient(135deg, rgba(255, 139, 93, 0.32), rgba(255, 194, 157, 0.14));
+}
+
+.trip-chip-offer {
+  background: linear-gradient(135deg, rgba(121, 215, 207, 0.24), rgba(29, 106, 103, 0.14));
+}
+
 .trip-chip-route {
   background: rgba(210, 105, 60, 0.14);
 }
@@ -1453,6 +1466,21 @@ main {
   border: 1px solid rgba(121, 215, 207, 0.14);
 }
 
+.map-legend-pill:nth-child(1) {
+  border-color: rgba(121, 215, 207, 0.2);
+  color: var(--teal);
+}
+
+.map-legend-pill:nth-child(2) {
+  border-color: rgba(255, 139, 93, 0.22);
+  color: var(--accent-strong);
+}
+
+.map-legend-pill:nth-child(3) {
+  border-color: rgba(255, 194, 157, 0.22);
+  color: #ffe4cf;
+}
+
 .trip-map {
   min-height: 420px;
   border-radius: 26px;
@@ -1614,6 +1642,24 @@ main {
   background: linear-gradient(135deg, #2c3f43, #4f8682 58%, #ffc29d);
 }
 
+.map-marker-bubble.is-request {
+  min-width: 104px;
+  background: linear-gradient(135deg, #3b241d, #b95d3a 60%, #ffcf9e);
+}
+
+.map-marker-bubble.is-request::after {
+  background: #b95d3a;
+}
+
+.map-marker-bubble.is-stay {
+  min-width: 104px;
+  background: linear-gradient(135deg, #0f2030, #2a5878 56%, #7ac8ff);
+}
+
+.map-marker-bubble.is-stay::after {
+  background: #2a5878;
+}
+
 .results-shell {
   padding: 22px;
   border-radius: 30px;
@@ -1638,6 +1684,16 @@ main {
   height: 4px;
 }
 
+.trip-card[data-listing-type="request"] {
+  background:
+    radial-gradient(circle at top right, rgba(255, 139, 93, 0.14), transparent 28%),
+    linear-gradient(180deg, rgba(18, 15, 14, 0.98), rgba(31, 24, 21, 0.94));
+}
+
+.trip-card[data-listing-type="request"]::after {
+  background: linear-gradient(90deg, #ff8b5d, #ffcf9e, #ffc29d);
+}
+
 .detail-card,
 .detail-sidebar,
 .form-card,
@@ -1657,9 +1713,27 @@ main {
   gap: 16px;
 }
 
+.profile-layout {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .stack-item {
   border-radius: 18px;
   background: rgba(11, 22, 27, 0.86);
+  display: grid;
+  gap: 8px;
+}
+
+.stack-item strong {
+  font-size: 1rem;
+}
+
+.stack-item-route {
+  margin: 0;
+}
+
+.stack-item-copy {
+  margin: 0;
 }
 
 .app-footer-nav {

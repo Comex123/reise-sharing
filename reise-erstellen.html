@@ -55,6 +55,13 @@
       <form id="tripForm" class="card-surface form-card">
         <div class="form-grid">
           <label>
+            <span>Typ</span>
+            <select name="listingType" id="listingTypeSelect">
+              <option value="offer">Angebot einstellen</option>
+              <option value="request">Anfrage posten</option>
+            </select>
+          </label>
+          <label>
             <span>Titel</span>
             <input name="title" type="text" placeholder="Wochenende in Prag" required />
           </label>
@@ -124,6 +131,7 @@
           </label>
         </div>
 
+        <p id="listingTypeHint" class="mini-note form-inline-note">Du stellst ein konkretes Angebot mit Region, Daten und Match-Option ein.</p>
         <p id="timingHint" class="mini-note form-inline-note">Du stellst einen Trip mit festen Daten ein.</p>
         <p id="travelModeHint" class="mini-note form-inline-note">Der Trip ist auf gemeinsames Reisen und Kostenteilung ausgelegt.</p>
 

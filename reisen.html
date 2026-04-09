@@ -111,6 +111,14 @@
                 <option value="hybrid">Solo + offen</option>
               </select>
             </label>
+            <label>
+              <span>Typ</span>
+              <select id="filterListingType">
+                <option value="">Alles</option>
+                <option value="offer">Angebote</option>
+                <option value="request">Anfragen</option>
+              </select>
+            </label>
           </div>
 
           <div class="filter-toolbar">
@@ -143,11 +151,11 @@
             </div>
             <div class="map-toolbar">
               <div class="map-legend">
-                <span class="map-legend-pill">Preis</span>
-                <span class="map-legend-pill">Marker anklicken</span>
-                <span class="map-legend-pill">Trip springt im Feed an</span>
+                <span class="map-legend-pill">Angebote</span>
+                <span class="map-legend-pill">Anfragen</span>
+                <span class="map-legend-pill">Ferienhaeuser</span>
               </div>
-              <p class="mini-note">So wirkt es mehr wie eine Reise-App: erst Region, dann Angebot, dann Kontakt.</p>
+              <p class="mini-note">So wirkt es mehr wie eine Reise-App: erst Region, dann Angebot oder Anfrage, dann passende Unterkunft und Kontakt.</p>
             </div>
             <div id="tripMap" class="trip-map" aria-label="Karte mit Reise-Markern"></div>
           </section>
