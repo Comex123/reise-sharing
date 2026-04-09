@@ -28,6 +28,15 @@
     return formatDate(startDate) + " bis " + formatDate(endDate);
   }
 
+  function formatDateTime(value) {
+    return new Intl.DateTimeFormat("de-DE", {
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(new Date(value));
+  }
+
   function tripDays(trip) {
     const start = new Date(trip.startDate);
     const end = new Date(trip.endDate);
@@ -63,12 +72,20 @@
     return window.StorageApi.getProfile();
   }
 
+  function setProfile(profileId) {
+    return window.StorageApi.setProfile(profileId);
+  }
+
   function getRequests() {
     return window.StorageApi.getRequests();
   }
 
   function getCostPlans() {
     return window.StorageApi.getCostPlans();
+  }
+
+  function getChats() {
+    return window.StorageApi.getChats();
   }
 
   function addRequest(request) {
@@ -79,10 +96,22 @@
     return window.StorageApi.saveCostPlan(costPlan);
   }
 
-  function getHostById(hostId) {
+  function upsertChat(chat) {
+    return window.StorageApi.upsertChat(chat);
+  }
+
+  function addChatMessage(chatId, message) {
+    return window.StorageApi.addChatMessage(chatId, message);
+  }
+
+  function getUserById(userId) {
     return window.AppData.users.find(function (user) {
-      return user.id === hostId;
+      return user.id === userId;
     }) || window.AppData.users[0];
+  }
+
+  function getHostById(hostId) {
+    return getUserById(hostId);
   }
 
   function getTripById(tripId) {
@@ -95,6 +124,39 @@
     return getCostPlans().find(function (costPlan) {
       return costPlan.tripId === tripId;
     });
+  }
+
+  function getChatById(chatId) {
+    return getChats().find(function (chat) {
+      return chat.id === chatId;
+    });
+  }
+
+  function findChatForTripAndUsers(tripId, firstUserId, secondUserId) {
+    return getChats().find(function (chat) {
+      const participantIds = Array.isArray(chat.participantIds) ? chat.participantIds : [];
+      return chat.tripId === tripId && participantIds.includes(firstUserId) && participantIds.includes(secondUserId);
+    });
+  }
+
+  function chatMessages(chat) {
+    return (chat && Array.isArray(chat.messages) ? chat.messages.slice() : []).sort(function (left, right) {
+      return new Date(left.sentAt) - new Date(right.sentAt);
+    });
+  }
+
+  function chatPartner(chat, currentUserId) {
+    const participantIds = Array.isArray(chat && chat.participantIds) ? chat.participantIds : [];
+    const partnerId = participantIds.find(function (id) {
+      return id !== currentUserId;
+    }) || currentUserId;
+    return getUserById(partnerId);
+  }
+
+  function chatPreview(chat) {
+    const messages = chatMessages(chat);
+    const lastMessage = messages[messages.length - 1];
+    return lastMessage ? excerpt(lastMessage.text, 72) : "Noch keine Nachricht";
   }
 
   function unlockLabel(value) {
@@ -908,12 +970,79 @@
     const host = getHostById(trip.hostId);
     const contactPlan = smartContactPlan(trip);
     const costPlan = normalizeCostPlan(getCostPlanByTripId(trip.id), trip);
+    const profile = getProfile();
+    const isOwnTrip = profile.id === trip.hostId;
+    const existingChat = findChatForTripAndUsers(trip.id, profile.id, trip.hostId);
+    const relatedChats = getChats().filter(function (chat) {
+      return chat.tripId === trip.id && Array.isArray(chat.participantIds) && chat.participantIds.includes(profile.id);
+    });
     const styleMarkup = trip.styles.map(function (style) {
       return '<span class="trip-chip">' + escapeHtml(style) + "</span>";
     }).join("");
     const audienceMarkup = tripAudiences(trip).map(function (audience) {
       return '<span class="meta-pill">' + escapeHtml(audience) + "</span>";
     }).join("");
+    const primaryActionMarkup = existingChat && !isOwnTrip
+      ? '<a class="button button-primary" href="chat.html?id=' + encodeURIComponent(existingChat.id) + '">Chat mit ' + escapeHtml(chatPartner(existingChat, profile.id).name) + " oeffnen</a>"
+      : isOwnTrip
+        ? (relatedChats.length
+          ? '<a class="button button-primary" href="chat.html?id=' + encodeURIComponent(relatedChats[0].id) + '">Reaktionen oeffnen</a>'
+          : '<a class="button button-primary" href="profil.html">Zum Profil</a>')
+        : '<button class="button button-primary" type="button" id="requestButton">' + escapeHtml(tripListingType(trip) === "request" ? "Auf Anfrage reagieren" : (tripTravelMode(trip) === "solo" ? "Optionalen Connect starten" : "Connect starten")) + "</button>";
+    const connectShellMarkup = isOwnTrip
+      ? [
+        '  <div class="smart-contact-shell">',
+        '    <p class="eyebrow">Deine Anzeige</p>',
+        "    <h3>Du bist hier der Host</h3>",
+        '    <p class="trip-copy">So sieht deine Anzeige fuer andere aus. Reaktionen, Connects und Chats findest du gesammelt im Profil.</p>',
+        relatedChats.length
+          ? '    <a class="button button-primary" href="chat.html?id=' + encodeURIComponent(relatedChats[0].id) + '">Ersten Chat oeffnen</a>'
+          : '    <a class="button button-secondary" href="profil.html">Zum Profil</a>',
+        "  </div>"
+      ].join("")
+      : existingChat
+        ? [
+          '  <div class="smart-contact-shell">',
+          '    <p class="eyebrow">Chat aktiv</p>',
+          '    <h3>Du schreibst schon mit ' + escapeHtml(chatPartner(existingChat, profile.id).name) + "</h3>",
+          '    <p class="trip-copy">Die erste Reaktion ist schon raus. Jetzt koennt ihr sicher abklaeren, ob Unterkunft, Kosten und Reise-Vibe wirklich zusammenpassen.</p>',
+          '    <a class="button button-primary" href="chat.html?id=' + encodeURIComponent(existingChat.id) + '">Chat oeffnen</a>',
+          "  </div>"
+        ].join("")
+        : [
+          '  <div class="smart-contact-shell">',
+          '    <p class="eyebrow">Connect Flow</p>',
+          '    <h3>' + escapeHtml(contactPlan.title) + "</h3>",
+          '    <p class="trip-copy">' + escapeHtml(contactPlan.description) + "</p>",
+          '    <ul class="smart-step-list">' + contactPlan.steps.map(function (step) {
+            return "<li>" + escapeHtml(step) + "</li>";
+          }).join("") + "</ul>",
+          '    <form id="smartConnectForm" class="smart-connect-form">',
+          '      <input type="hidden" name="contactMode" id="contactModeInput" value="' + escapeHtml(contactPlan.recommendedMode) + '" />',
+          '      <div class="contact-mode-grid">',
+          '        <button type="button" class="contact-mode" data-contact-mode="app-chat">Anonym starten</button>',
+          '        <button type="button" class="contact-mode" data-contact-mode="fit-check">Match-Check</button>',
+          '        <button type="button" class="contact-mode" data-contact-mode="contact-unlock">Spaeter freigeben</button>',
+          "      </div>",
+          '      <div class="smart-form-grid">',
+          '        <label>',
+          '          <span>Dein Name oder Alias</span>',
+          '          <input name="applicantName" type="text" placeholder="z. B. Lina oder TravelLina" required />',
+          "        </label>",
+          '        <label>',
+          '          <span>Wann passt dir Kontakt?</span>',
+          '          <input name="preferredWindow" type="text" placeholder="z. B. abends oder flexibel" required />',
+          "        </label>",
+          "      </div>",
+          '      <label>',
+          '        <span>Erste Nachricht</span>',
+          '        <textarea name="message" rows="4" placeholder="Warum passt dieser Trip gut zu dir?" required></textarea>',
+          "      </label>",
+          '      <button class="button button-primary" type="submit">Sicheren Erstkontakt senden</button>',
+          '      <p id="smartConnectMessage" class="status-message smart-connect-message"></p>',
+          "    </form>",
+          "  </div>"
+        ].join("");
 
     target.innerHTML = [
       '<article class="detail-card card-surface">',
@@ -992,7 +1121,7 @@
       "    </form>",
       "  </section>",
       '  <div class="trip-actions">',
-      '    <button class="button button-primary" type="button" id="requestButton">' + escapeHtml(tripListingType(trip) === "request" ? "Auf Anfrage reagieren" : (tripTravelMode(trip) === "solo" ? "Optionalen Connect starten" : "Connect starten")) + "</button>",
+      primaryActionMarkup,
       '    <a class="button button-secondary" href="reisen.html">Zurueck zur Liste</a>',
       "  </div>",
       "</article>",
@@ -1023,38 +1152,7 @@
       tripListingType(trip) === "request" ? "      <li>Treffpunkt und persoenliche Routendetails</li>" : "      <li>Treffpunkt und private Kontaktdaten</li>",
       "    </ul>",
       "  </div>",
-      '  <div class="smart-contact-shell">',
-      '    <p class="eyebrow">Connect Flow</p>',
-      '    <h3>' + escapeHtml(contactPlan.title) + "</h3>",
-      '    <p class="trip-copy">' + escapeHtml(contactPlan.description) + "</p>",
-      '    <ul class="smart-step-list">' + contactPlan.steps.map(function (step) {
-        return "<li>" + escapeHtml(step) + "</li>";
-      }).join("") + "</ul>",
-      '    <form id="smartConnectForm" class="smart-connect-form">',
-      '      <input type="hidden" name="contactMode" id="contactModeInput" value="' + escapeHtml(contactPlan.recommendedMode) + '" />',
-      '      <div class="contact-mode-grid">',
-      '        <button type="button" class="contact-mode" data-contact-mode="app-chat">Anonym starten</button>',
-      '        <button type="button" class="contact-mode" data-contact-mode="fit-check">Match-Check</button>',
-      '        <button type="button" class="contact-mode" data-contact-mode="contact-unlock">Spaeter freigeben</button>',
-      "      </div>",
-      '      <div class="smart-form-grid">',
-      '        <label>',
-      '          <span>Dein Name oder Alias</span>',
-      '          <input name="applicantName" type="text" placeholder="z. B. Lina oder TravelLina" required />',
-      "        </label>",
-      '        <label>',
-      '          <span>Wann passt dir Kontakt?</span>',
-      '          <input name="preferredWindow" type="text" placeholder="z. B. abends oder flexibel" required />',
-      "        </label>",
-      "      </div>",
-      '      <label>',
-      '        <span>Erste Nachricht</span>',
-      '        <textarea name="message" rows="4" placeholder="Warum passt dieser Trip gut zu dir?" required></textarea>',
-      "      </label>",
-      '      <button class="button button-primary" type="submit">Sicheren Erstkontakt senden</button>',
-      '      <p id="smartConnectMessage" class="status-message smart-connect-message"></p>',
-      "    </form>",
-      "  </div>",
+      connectShellMarkup,
       "</aside>"
     ].join("");
 
@@ -1070,6 +1168,24 @@
     const costPerPersonValue = document.getElementById("costPerPersonValue");
     const costPlanStatusValue = document.getElementById("costPlanStatusValue");
     const costSplitHelp = document.getElementById("costSplitHelp");
+
+    if (smartForm) {
+      const applicantField = smartForm.elements.namedItem("applicantName");
+      const preferredWindowField = smartForm.elements.namedItem("preferredWindow");
+      const messageField = smartForm.elements.namedItem("message");
+
+      if (applicantField && !applicantField.value) {
+        applicantField.value = profile.name;
+      }
+
+      if (preferredWindowField && !preferredWindowField.value) {
+        preferredWindowField.value = "Heute Abend oder morgen";
+      }
+
+      if (messageField && !messageField.value) {
+        messageField.value = "Hi " + host.name.split(" ")[0] + ", dein MatchTrip wirkt passend fuer mich. Ich wuerde gern erst Zeitraum, Kosten und Vibe hier im Chat abgleichen.";
+      }
+    }
 
     function readCostPlanForm(statusOverride) {
       if (!costPlanForm) {
@@ -1163,16 +1279,19 @@
         event.preventDefault();
 
         const formData = new FormData(smartForm);
+        const now = new Date();
+        const nowIso = now.toISOString();
         const request = {
-          id: "r" + Date.now(),
+          id: "r" + now.getTime(),
           tripId: trip.id,
+          applicantId: profile.id,
           applicantName: String(formData.get("applicantName")).trim(),
           message: String(formData.get("message")).trim(),
           contactMode: formData.get("contactMode"),
           privacyStage: formData.get("contactMode") === "app-chat" ? "Anonym" : "Alias sichtbar",
           preferredWindow: String(formData.get("preferredWindow")).trim(),
-          nextStep: contactPlan.steps[1],
-          status: "Neu"
+          nextStep: "Chat ist offen und ihr koennt direkt schreiben",
+          status: "Chat offen"
         };
 
         if (!request.applicantName || !request.message || !request.preferredWindow) {
@@ -1182,10 +1301,28 @@
         }
 
         addRequest(request);
-        smartForm.reset();
-        updateContactMode(contactPlan.recommendedMode);
-        smartMessage.classList.remove("is-error");
-        smartMessage.textContent = "Connect gestartet. Zuerst werden nur Alias, Kontaktweg und Intro geteilt.";
+        upsertChat({
+          id: "c" + now.getTime(),
+          tripId: trip.id,
+          requestId: request.id,
+          participantIds: [profile.id, trip.hostId],
+          lastMessageAt: new Date(now.getTime() + 60000).toISOString(),
+          messages: [
+            {
+              id: "m" + now.getTime(),
+              senderId: profile.id,
+              text: request.message,
+              sentAt: nowIso
+            },
+            {
+              id: "m" + (now.getTime() + 1),
+              senderId: trip.hostId,
+              text: "Hi " + request.applicantName + ", ich habe deine Anfrage gesehen. Lass uns hier erst entspannt Unterkunft, Kosten und Timing abgleichen.",
+              sentAt: new Date(now.getTime() + 60000).toISOString()
+            }
+          ]
+        });
+        window.location.href = "chat.html?id=" + encodeURIComponent("c" + now.getTime());
       });
     }
   }
@@ -1194,6 +1331,7 @@
     const form = document.getElementById("tripForm");
     const message = document.getElementById("createMessage");
     const tripPicker = createTripPickerMap();
+    const profile = getProfile();
     const timingModeSelect = document.getElementById("timingModeSelect");
     const timingHint = document.getElementById("timingHint");
     const travelModeSelect = document.getElementById("travelModeSelect");
@@ -1329,7 +1467,7 @@
 
       const trip = {
         id: "t" + Date.now(),
-        hostId: "u1",
+        hostId: profile.id,
         listingType: data.get("listingType") || "offer",
         title: String(data.get("title")).trim(),
         startCity: String(data.get("startCity")).trim(),
@@ -1364,14 +1502,16 @@
       updateListingTypeUi();
       message.classList.remove("is-error");
       message.textContent = data.get("listingType") === "request"
-        ? 'Anfrage gespeichert. Sie ist jetzt auf der Karte, unter "Entdecken" und im Profil sichtbar.'
-        : 'MatchTrip gespeichert. Du findest ihn jetzt unter "Entdecken" und im Profil.';
+        ? 'Anfrage fuer ' + profile.name + ' gespeichert. Sie ist jetzt auf der Karte, unter "Entdecken" und im Profil sichtbar.'
+        : 'MatchTrip fuer ' + profile.name + ' gespeichert. Du findest ihn jetzt unter "Entdecken" und im Profil.';
     });
   }
 
   function initProfilePage() {
     const profileCard = document.getElementById("profileCard");
+    const profileSwitcher = document.getElementById("profileSwitcher");
     const hostedTrips = document.getElementById("hostedTrips");
+    const chatList = document.getElementById("chatList");
     const requestList = document.getElementById("requestList");
     const costPlanList = document.getElementById("costPlanList");
     const profile = getProfile();
@@ -1388,11 +1528,36 @@
       '  <span class="meta-pill">' + escapeHtml(profile.homeBase) + "</span>",
       '  <span class="meta-pill">' + escapeHtml(profile.languages.join(", ")) + "</span>",
       '  <span class="meta-pill">' + (profile.verified ? "Verifiziert" : "Nicht verifiziert") + "</span>",
+      '  <span class="status-pill">Aktiv in der Demo</span>',
       "</div>",
       '<div class="trip-tags">' + profile.interests.map(function (interest) {
         return '<span class="trip-chip">' + escapeHtml(interest) + "</span>";
       }).join("") + "</div>"
     ].join("");
+
+    if (profileSwitcher) {
+      const demoProfiles = (window.AppData.demoProfileIds || []).map(getUserById);
+
+      if (!demoProfiles.length) {
+        renderEmptyList(profileSwitcher, "Noch keine Demo-Profile eingerichtet.");
+      } else {
+        profileSwitcher.innerHTML = demoProfiles.map(function (user) {
+          return [
+            '<button class="profile-switch-button' + (user.id === profile.id ? " is-active" : "") + '" type="button" data-profile-id="' + escapeHtml(user.id) + '">',
+            '  <strong>' + escapeHtml(user.name) + "</strong>",
+            '  <span>' + escapeHtml(user.homeBase) + " | " + escapeHtml(excerpt(user.about, 54)) + "</span>",
+            "</button>"
+          ].join("");
+        }).join("");
+
+        Array.prototype.slice.call(profileSwitcher.querySelectorAll("[data-profile-id]")).forEach(function (button) {
+          button.addEventListener("click", function () {
+            setProfile(button.dataset.profileId);
+            window.location.reload();
+          });
+        });
+      }
+    }
 
     const ownTrips = getTrips().filter(function (trip) {
       return trip.hostId === profile.id;
@@ -1418,21 +1583,60 @@
       }).join("");
     }
 
-    const requests = getRequests();
+    const profileChats = getChats().filter(function (chat) {
+      return Array.isArray(chat.participantIds) && chat.participantIds.includes(profile.id);
+    }).sort(function (left, right) {
+      return new Date(right.lastMessageAt || 0) - new Date(left.lastMessageAt || 0);
+    });
+
+    if (chatList) {
+      if (!profileChats.length) {
+        renderEmptyList(chatList, "Noch kein aktiver Chat. Reagiere auf einen MatchTrip und der Chat startet hier.");
+      } else {
+        chatList.innerHTML = profileChats.map(function (chat) {
+          const partner = chatPartner(chat, profile.id);
+          const trip = getTripById(chat.tripId);
+
+          return [
+            '<div class="stack-item">',
+            "  <strong>" + escapeHtml(partner.name) + "</strong>",
+            '  <p class="trip-copy">' + escapeHtml(trip ? trip.title : "Allgemeiner MatchTrip") + "</p>",
+            '  <p class="mini-note stack-item-copy">' + escapeHtml(chatPreview(chat)) + "</p>",
+            '  <p class="mini-note">Letzte Aktivitaet: ' + escapeHtml(formatDateTime(chat.lastMessageAt || new Date().toISOString())) + "</p>",
+            '  <a class="text-link" href="chat.html?id=' + encodeURIComponent(chat.id) + '">Chat oeffnen</a>',
+            "</div>"
+          ].join("");
+        }).join("");
+      }
+    }
+
+    const requests = getRequests().filter(function (request) {
+      const trip = getTripById(request.tripId);
+      return request.applicantId === profile.id || (trip && trip.hostId === profile.id);
+    });
+
     if (!requests.length) {
-      renderEmptyList(requestList, "Aktuell gibt es keine offenen Anfragen.");
+      renderEmptyList(requestList, "Aktuell gibt es keine passenden Reaktionen oder Anfragen.");
     } else {
       requestList.innerHTML = requests.map(function (request) {
         const trip = getTripById(request.tripId);
+        const isSent = request.applicantId === profile.id;
+        const counterParty = isSent
+          ? (trip ? getHostById(trip.hostId) : null)
+          : (request.applicantId ? getUserById(request.applicantId) : null);
+        const linkedChat = trip && counterParty
+          ? findChatForTripAndUsers(trip.id, profile.id, counterParty.id)
+          : null;
 
         return [
           '<div class="stack-item">',
-          "  <strong>" + escapeHtml(request.applicantName) + "</strong>",
+          "  <strong>" + escapeHtml(isSent ? "Du an " + (counterParty ? counterParty.name : "Match") : (request.applicantName + " an dich")) + "</strong>",
           '  <p class="trip-copy">' + escapeHtml(trip ? trip.title : "Allgemeine Anfrage") + "</p>",
           '  <p class="trip-copy">' + escapeHtml(request.message) + "</p>",
           '  <p class="mini-note">Kontaktweg: ' + escapeHtml(contactModeLabel(request.contactMode || "")) + " | " + escapeHtml(request.privacyStage || "Standard") + "</p>",
           '  <p class="mini-note">Naechster Schritt: ' + escapeHtml(request.nextStep || "Kontakt pruefen") + "</p>",
           '  <span class="status-pill">' + escapeHtml(request.status) + "</span>",
+          linkedChat ? '  <a class="text-link" href="chat.html?id=' + encodeURIComponent(linkedChat.id) + '">Zum Chat</a>' : "",
           "</div>"
         ].join("");
       }).join("");
@@ -1463,6 +1667,117 @@
     }
   }
 
+  function initChatPage() {
+    const threadList = document.getElementById("chatThreadList");
+    const chatScreen = document.getElementById("chatScreen");
+    const profileBadge = document.getElementById("chatProfileBadge");
+    const profile = getProfile();
+
+    if (!threadList || !chatScreen) {
+      return;
+    }
+
+    if (profileBadge) {
+      profileBadge.textContent = profile.name;
+    }
+
+    const chats = getChats().filter(function (chat) {
+      return Array.isArray(chat.participantIds) && chat.participantIds.includes(profile.id);
+    }).sort(function (left, right) {
+      return new Date(right.lastMessageAt || 0) - new Date(left.lastMessageAt || 0);
+    });
+
+    if (!chats.length) {
+      renderEmptyList(threadList, "Noch kein Chat offen.");
+      chatScreen.innerHTML = '<div class="empty-state">Reagiere auf einen MatchTrip oder wechsle im Profil auf Daniel oder Mel, um die Demo-Konversation zu sehen.</div>';
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const activeChat = chats.find(function (chat) {
+      return chat.id === params.get("id");
+    }) || chats[0];
+
+    threadList.innerHTML = chats.map(function (chat) {
+      const trip = getTripById(chat.tripId);
+      const partner = chatPartner(chat, profile.id);
+      const isActive = activeChat && activeChat.id === chat.id;
+
+      return [
+        '<a class="chat-thread-link' + (isActive ? " is-active" : "") + '" href="chat.html?id=' + encodeURIComponent(chat.id) + '">',
+        '  <strong>' + escapeHtml(partner.name) + "</strong>",
+        '  <span>' + escapeHtml(trip ? trip.title : "Allgemeiner MatchTrip") + "</span>",
+        '  <small>' + escapeHtml(chatPreview(chat)) + "</small>",
+        "</a>"
+      ].join("");
+    }).join("");
+
+    const activeTrip = getTripById(activeChat.tripId);
+    const activePartner = chatPartner(activeChat, profile.id);
+    const messagesMarkup = chatMessages(activeChat).map(function (message) {
+      const isOwnMessage = message.senderId === profile.id;
+      const sender = getUserById(message.senderId);
+
+      return [
+        '<article class="chat-bubble' + (isOwnMessage ? " is-own" : "") + '">',
+        '  <p class="chat-bubble-meta">' + escapeHtml(sender.name) + " | " + escapeHtml(formatDateTime(message.sentAt)) + "</p>",
+        '  <p>' + escapeHtml(message.text) + "</p>",
+        "</article>"
+      ].join("");
+    }).join("");
+
+    chatScreen.innerHTML = [
+      '<div class="chat-screen-header">',
+      '  <div>',
+      '    <p class="eyebrow">Chat</p>',
+      '    <h2>' + escapeHtml(activePartner.name) + "</h2>",
+      '    <p class="trip-copy">' + escapeHtml(activeTrip ? activeTrip.title : "Allgemeiner MatchTrip") + "</p>",
+      "  </div>",
+      '  <div class="chat-screen-actions">',
+      activeTrip ? '    <a class="button button-secondary button-small" href="reise-detail.html?id=' + encodeURIComponent(activeTrip.id) + '">Zum MatchTrip</a>' : "",
+      '    <a class="button button-secondary button-small" href="profil.html">Profil wechseln</a>',
+      "  </div>",
+      "</div>",
+      '<p class="mini-note">Aktiv als ' + escapeHtml(profile.name) + '. Du kannst im Profil zwischen Daniel und Mel wechseln und den Chat aus beiden Perspektiven sehen.</p>',
+      '<div class="chat-message-list">' + messagesMarkup + "</div>",
+      '<form id="chatReplyForm" class="chat-reply-form">',
+      '  <textarea name="message" rows="3" placeholder="Schreib hier deine naechste Nachricht..." required></textarea>',
+      '  <div class="form-actions">',
+      '    <button class="button button-primary" type="submit">Nachricht senden</button>',
+      '    <span id="chatReplyStatus" class="mini-note"></span>',
+      "  </div>",
+      "</form>"
+    ].join("");
+
+    const replyForm = document.getElementById("chatReplyForm");
+    const replyStatus = document.getElementById("chatReplyStatus");
+
+    if (replyForm) {
+      replyForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const formData = new FormData(replyForm);
+        const text = String(formData.get("message") || "").trim();
+
+        if (!text) {
+          if (replyStatus) {
+            replyStatus.textContent = "Bitte erst eine Nachricht schreiben.";
+          }
+          return;
+        }
+
+        addChatMessage(activeChat.id, {
+          id: "m" + Date.now(),
+          senderId: profile.id,
+          text: text,
+          sentAt: new Date().toISOString()
+        });
+
+        window.location.href = "chat.html?id=" + encodeURIComponent(activeChat.id);
+      });
+    }
+  }
+
   function init() {
     const page = document.body.dataset.page;
 
@@ -1484,6 +1799,10 @@
 
     if (page === "profile") {
       initProfilePage();
+    }
+
+    if (page === "chat") {
+      initChatPage();
     }
   }
 

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chats | MatchTrip</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/data.js" defer></script>
+  <script src="js/storage.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body data-page="chat">
+  <div class="app-shell">
+    <header class="site-header app-header">
+      <div class="app-header-top">
+        <a class="brand" href="index.html">
+          <span class="brand-mark">MT</span>
+          <span class="brand-copy">
+            <strong>MatchTrip</strong>
+            <small>Match. Vibe. Trip.</small>
+          </span>
+        </a>
+        <div class="app-header-meta">
+          <span class="app-badge">Chat</span>
+          <span class="app-badge" id="chatProfileBadge">Profil</span>
+        </div>
+      </div>
+      <nav class="site-nav">
+        <a href="index.html">Start</a>
+        <a href="reisen.html">Reisen</a>
+        <a href="reise-erstellen.html">Anlegen</a>
+        <a href="profil.html">Profil</a>
+      </nav>
+    </header>
+
+    <main class="app-main page-stack">
+      <section class="page-intro card-surface app-intro-card">
+        <p class="eyebrow">Sicherer Connect</p>
+        <h1>Chat direkt in MatchTrip.</h1>
+        <p class="lead">Erst Timing, Unterkunft und Kosten abgleichen. Private Daten bleiben draussen, bis ihr euch wirklich sicher seid.</p>
+      </section>
+
+      <section class="chat-layout">
+        <aside class="card-surface chat-sidebar">
+          <p class="eyebrow">Threads</p>
+          <h2>Deine Chats</h2>
+          <div id="chatThreadList" class="stack-list"></div>
+        </aside>
+        <section id="chatScreen" class="card-surface chat-screen"></section>
+      </section>
+    </main>
+
+    <nav class="app-footer-nav card-surface" aria-label="App Navigation">
+      <a href="index.html">Start</a>
+      <a href="reisen.html">Entdecken</a>
+      <a href="reise-erstellen.html">Anlegen</a>
+      <a href="profil.html">Profil</a>
+    </nav>
+  </div>
+</body>
+</html>

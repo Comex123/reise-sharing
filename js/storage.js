@@ -3,7 +3,8 @@
     trips: "reiseSharing.trips",
     requests: "reiseSharing.requests",
     profile: "reiseSharing.profile",
-    costPlans: "reiseSharing.costPlans"
+    costPlans: "reiseSharing.costPlans",
+    chats: "reiseSharing.chats"
   };
 
   function clone(value) {
@@ -86,10 +87,30 @@
     return request;
   }
 
+  function getDefaultProfile() {
+    const defaultId = window.AppData.defaultProfileId;
+    return clone(window.AppData.users.find(function (user) {
+      return user.id === defaultId;
+    }) || window.AppData.users[0]);
+  }
+
   function getProfile() {
-    const profile = read(KEYS.profile, window.AppData.users[0]);
+    const profile = read(KEYS.profile, getDefaultProfile());
     write(KEYS.profile, profile);
     return profile;
+  }
+
+  function setProfile(profileId) {
+    const nextProfile = window.AppData.users.find(function (user) {
+      return user.id === profileId;
+    });
+
+    if (!nextProfile) {
+      return getProfile();
+    }
+
+    write(KEYS.profile, nextProfile);
+    return clone(nextProfile);
   }
 
   function getCostPlans() {
@@ -119,6 +140,52 @@
     return costPlan;
   }
 
+  function getChats() {
+    const storedChats = read(KEYS.chats, []);
+    const chats = storedChats.length ? mergeSeedItems(storedChats, window.AppData.chats || []) : clone(window.AppData.chats || []);
+    write(KEYS.chats, chats);
+    return chats;
+  }
+
+  function saveChats(chats) {
+    write(KEYS.chats, chats);
+  }
+
+  function upsertChat(chat) {
+    const chats = getChats();
+    const index = chats.findIndex(function (entry) {
+      return entry.id === chat.id;
+    });
+
+    if (index >= 0) {
+      chats[index] = clone(chat);
+    } else {
+      chats.unshift(clone(chat));
+    }
+
+    saveChats(chats);
+    return chat;
+  }
+
+  function addChatMessage(chatId, message) {
+    const chats = getChats();
+    const index = chats.findIndex(function (entry) {
+      return entry.id === chatId;
+    });
+
+    if (index === -1) {
+      return null;
+    }
+
+    const chat = chats[index];
+    chat.messages = Array.isArray(chat.messages) ? chat.messages : [];
+    chat.messages.push(clone(message));
+    chat.lastMessageAt = message.sentAt;
+    chats[index] = chat;
+    saveChats(chats);
+    return clone(chat);
+  }
+
   window.StorageApi = {
     getTrips,
     saveTrips,
@@ -127,8 +194,13 @@
     saveRequests,
     addRequest,
     getProfile,
+    setProfile,
     getCostPlans,
     saveCostPlans,
-    saveCostPlan
+    saveCostPlan,
+    getChats,
+    saveChats,
+    upsertChat,
+    addChatMessage
   };
 })();

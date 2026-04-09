@@ -1,4 +1,6 @@
 window.AppData = {
+  defaultProfileId: "u5",
+  demoProfileIds: ["u5", "u6"],
   users: [
     {
       id: "u1",
@@ -50,6 +52,32 @@ window.AppData = {
       contact: {
         email: "yasmin@example.local",
         phone: "+49 000 000003"
+      }
+    },
+    {
+      id: "u5",
+      name: "Daniel Reuter",
+      homeBase: "Dortmund",
+      about: "Ich will MatchTrip so nutzen, dass sich Reisen locker und fair planen lassen. Am liebsten mag ich Meer, gute Cafes und entspannte Kommunikation.",
+      languages: ["Deutsch", "Englisch"],
+      interests: ["Meer", "Food", "Kurztrip"],
+      verified: true,
+      contact: {
+        email: "daniel@example.local",
+        phone: "+49 000 000004"
+      }
+    },
+    {
+      id: "u6",
+      name: "Mel Winter",
+      homeBase: "Essen",
+      about: "Ich mag kleine Ferienhaeuser, Nordsee-Luft und Trips, die freundlich geplant sind statt stressig zu werden.",
+      languages: ["Deutsch", "Englisch"],
+      interests: ["Ferienhaus", "Kueste", "Natur"],
+      verified: true,
+      contact: {
+        email: "mel@example.local",
+        phone: "+49 000 000005"
       }
     }
   ],
@@ -321,6 +349,52 @@ window.AppData = {
       notes: "Noch kein fixes Haus, eher ruhige Kueste mit kurzen Wegen. Ich suche nur dann eine passende Begleitung, wenn Tempo und Alltag wirklich harmonieren.",
       contactUnlock: "after-request",
       status: "Anfrage offen"
+    },
+    {
+      id: "t13",
+      hostId: "u6",
+      title: "Mel sucht Match fuer Zeeland Haus am Meer",
+      startCity: "Essen",
+      destinationCity: "Zeeland",
+      country: "Niederlande",
+      startDate: "2026-07-18",
+      endDate: "2026-07-24",
+      timingMode: "fixed",
+      travelMode: "hybrid",
+      seats: 1,
+      budgetPerPerson: 210,
+      lat: 51.4989,
+      lng: 3.8405,
+      groupType: "Single",
+      audiences: ["Singles", "Freundesgruppen", "Berufstaetige"],
+      styles: ["Meer", "Ferienhaus", "Natur"],
+      notes: "Ich habe ein ruhiges Ferienhaus in Zeeland im Blick und suche genau eine Person, die entspannt, verlaesslich und offen fuer gemeinsames Planen ist.",
+      contactUnlock: "after-request",
+      status: "Offen"
+    },
+    {
+      id: "t14",
+      hostId: "u5",
+      listingType: "request",
+      title: "Daniel ist offen fuer Porto oder Lissabon",
+      startCity: "Dortmund",
+      destinationCity: "",
+      regionLabel: "Portugal Kueste",
+      country: "Portugal",
+      startDate: "2026-09-03",
+      endDate: "2026-09-16",
+      timingMode: "flexible",
+      travelMode: "hybrid",
+      seats: 1,
+      budgetPerPerson: 360,
+      lat: 39.3999,
+      lng: -8.2245,
+      groupType: "Single",
+      audiences: ["Singles", "Berufstaetige"],
+      styles: ["Meer", "Food", "Staedtereise"],
+      notes: "Noch kein fixer Ort, aber Portugal ist gesetzt. Ich bin offen fuer Porto, Lissabon oder etwas dazwischen, wenn der Vibe passt.",
+      contactUnlock: "after-request",
+      status: "Anfrage offen"
     }
   ],
   stays: [
@@ -421,6 +495,47 @@ window.AppData = {
       preferredWindow: "Flexible Zeiten",
       nextStep: "Zuerst Erwartungen und Tempo abgleichen, dann Familien-Details teilen",
       status: "Offen"
+    },
+    {
+      id: "r5",
+      tripId: "t13",
+      applicantId: "u5",
+      applicantName: "Daniel",
+      message: "Hi Mel, Zeeland klingt richtig gut. Wenn du magst, koennen wir erst Haus, Kosten und Tagesrhythmus hier im Chat abgleichen.",
+      contactMode: "app-chat",
+      privacyStage: "Alias sichtbar",
+      preferredWindow: "Heute Abend oder morgen",
+      nextStep: "Chat ist offen und Unterkunft kann gemeinsam geprueft werden",
+      status: "Chat offen"
+    }
+  ],
+  chats: [
+    {
+      id: "c1",
+      tripId: "t13",
+      requestId: "r5",
+      participantIds: ["u5", "u6"],
+      lastMessageAt: "2026-04-09T10:18:00.000Z",
+      messages: [
+        {
+          id: "m1",
+          senderId: "u5",
+          text: "Hi Mel, Zeeland klingt richtig gut. Wenn du magst, koennen wir erst Haus, Kosten und Tagesrhythmus hier im Chat abgleichen.",
+          sentAt: "2026-04-09T10:12:00.000Z"
+        },
+        {
+          id: "m2",
+          senderId: "u6",
+          text: "Ja sehr gern. Ich will genau erst klaeren, ob Unterkunft und Reise-Vibe passen, bevor wir irgendwas fest buchen.",
+          sentAt: "2026-04-09T10:15:00.000Z"
+        },
+        {
+          id: "m3",
+          senderId: "u5",
+          text: "Perfekt. Preisrahmen und Nordseehaus passen fuer mich schon mal. Lass uns als Naechstes schauen, ob wir eher ruhig oder aktiv planen.",
+          sentAt: "2026-04-09T10:18:00.000Z"
+        }
+      ]
     }
   ],
   costPlans: [
