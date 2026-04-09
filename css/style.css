@@ -634,6 +634,10 @@ button {
   font-weight: 700;
 }
 
+.form-inline-note {
+  margin: 0 0 16px;
+}
+
 .choice-grid {
   display: flex;
   flex-wrap: wrap;

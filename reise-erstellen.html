@@ -79,6 +79,13 @@
             <input name="endDate" type="date" required />
           </label>
           <label>
+            <span>Terminmodell</span>
+            <select name="timingMode" id="timingModeSelect">
+              <option value="fixed">Feste Daten</option>
+              <option value="flexible">Flexibel im Zeitraum</option>
+            </select>
+          </label>
+          <label>
             <span>Freie Plaetze</span>
             <input name="seats" type="number" min="1" max="8" value="2" required />
           </label>
@@ -108,6 +115,8 @@
             </select>
           </label>
         </div>
+
+        <p id="timingHint" class="mini-note form-inline-note">Du stellst einen Trip mit festen Daten ein.</p>
 
         <fieldset class="choice-group">
           <legend>Zielgruppen</legend>

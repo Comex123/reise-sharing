@@ -91,6 +91,34 @@
     return trip.groupType || "Offen";
   }
 
+  function tripTimingMode(trip) {
+    return trip && trip.timingMode === "flexible" ? "flexible" : "fixed";
+  }
+
+  function tripTimingLabel(trip) {
+    if (tripTimingMode(trip) === "flexible") {
+      return "Flexibel im Zeitraum";
+    }
+
+    return "Feste Daten";
+  }
+
+  function tripTimingRange(trip) {
+    if (tripTimingMode(trip) === "flexible") {
+      return "Flexibel zwischen " + formatRange(trip.startDate, trip.endDate);
+    }
+
+    return formatRange(trip.startDate, trip.endDate);
+  }
+
+  function tripPlanningLabel(trip) {
+    if (tripTimingMode(trip) === "flexible") {
+      return "Termin wird gemeinsam festgelegt";
+    }
+
+    return tripDays(trip) + " Tage";
+  }
+
   function contactModeLabel(mode) {
     const labels = {
       "app-chat": "Anonymer App-Chat",
@@ -160,7 +188,7 @@
       '  <p class="eyebrow">Live Angebot</p>',
       '  <strong>' + escapeHtml(trip.title) + "</strong>",
       '  <p>' + escapeHtml(trip.destinationCity) + ", " + escapeHtml(trip.country) + "</p>",
-      '  <p class="mini-note">' + escapeHtml(formatRange(trip.startDate, trip.endDate)) + "</p>",
+      '  <p class="mini-note">' + escapeHtml(tripTimingRange(trip)) + "</p>",
       '  <p class="mini-note">Mit ' + escapeHtml(host.name) + " | " + euro(trip.budgetPerPerson) + " | " + trip.seats + " freie Plaetze</p>",
       '  <a class="text-link" href="reise-detail.html?id=' + encodeURIComponent(trip.id) + '">Details ansehen</a>',
       "</div>"
@@ -440,13 +468,14 @@
       '  <div class="trip-title-row">',
       '    <div>',
       '      <h3>' + escapeHtml(trip.title) + '</h3>',
-      '      <p class="trip-copy">' + escapeHtml(formatRange(trip.startDate, trip.endDate)) + '</p>',
+      '      <p class="trip-copy">' + escapeHtml(tripTimingRange(trip)) + '</p>',
       '    </div>',
       '    <strong>' + euro(trip.budgetPerPerson) + '</strong>',
       '  </div>',
       '  <div class="trip-meta">',
       '    <span class="meta-pill">' + escapeHtml(trip.country) + '</span>',
-      '    <span class="meta-pill">' + tripDays(trip) + ' Tage</span>',
+      '    <span class="meta-pill">' + escapeHtml(tripTimingLabel(trip)) + '</span>',
+      '    <span class="meta-pill">' + escapeHtml(tripPlanningLabel(trip)) + '</span>',
       '    <span class="meta-pill">' + trip.seats + ' freie Plaetze</span>',
       hasTripLocation(trip) ? '    <span class="meta-pill">Marker live</span>' : "",
       '    <span class="meta-pill">Startet als: ' + escapeHtml(groupTypeLabel(trip)) + '</span>',
@@ -508,6 +537,7 @@
     const budgetInput = document.getElementById("filterBudget");
     const styleSelect = document.getElementById("filterStyle");
     const groupTypeSelect = document.getElementById("filterGroupType");
+    const timingSelect = document.getElementById("filterTiming");
     const audienceButtons = Array.prototype.slice.call(document.querySelectorAll("[data-audience]"));
     const clearFiltersButton = document.getElementById("clearFilters");
     const tripMap = createTripsMap("tripMap", "mapSummary");
@@ -527,6 +557,7 @@
       const budget = Number(budgetInput.value || 0);
       const style = styleSelect.value;
       const groupType = groupTypeSelect.value;
+      const timingMode = timingSelect.value;
       const selectedAudience = activeAudience;
       const filtered = getTrips().filter(function (trip) {
         const destinationText = [trip.destinationCity, trip.country, trip.startCity].join(" ").toLowerCase();
@@ -534,8 +565,9 @@
         const matchesBudget = !budget || Number(trip.budgetPerPerson) <= budget;
         const matchesStyle = !style || trip.styles.includes(style);
         const matchesGroupType = !groupType || groupTypeLabel(trip) === groupType;
+        const matchesTiming = !timingMode || tripTimingMode(trip) === timingMode;
         const matchesAudience = !selectedAudience || tripAudiences(trip).includes(selectedAudience);
-        return matchesDestination && matchesBudget && matchesStyle && matchesGroupType && matchesAudience;
+        return matchesDestination && matchesBudget && matchesStyle && matchesGroupType && matchesTiming && matchesAudience;
       });
 
       setText("tripCount", filtered.length + (filtered.length === 1 ? " Reise" : " Reisen"));
@@ -547,7 +579,7 @@
       }
     }
 
-    [destinationInput, budgetInput, styleSelect, groupTypeSelect].forEach(function (element) {
+    [destinationInput, budgetInput, styleSelect, groupTypeSelect, timingSelect].forEach(function (element) {
       element.addEventListener("input", applyFilters);
       element.addEventListener("change", applyFilters);
     });
@@ -565,6 +597,7 @@
         budgetInput.value = "";
         styleSelect.value = "";
         groupTypeSelect.value = "";
+        timingSelect.value = "";
         updateAudienceButtons("");
         applyFilters();
       });
@@ -615,8 +648,8 @@
       '    <strong>' + euro(trip.budgetPerPerson) + '</strong>',
       '  </div>',
       '  <div class="detail-signal-grid">',
-      '    <article class="detail-signal"><span>Zeitraum</span><strong>' + escapeHtml(formatRange(trip.startDate, trip.endDate)) + "</strong></article>",
-      '    <article class="detail-signal"><span>Dauer</span><strong>' + tripDays(trip) + ' Tage</strong></article>',
+      '    <article class="detail-signal"><span>Zeitraum</span><strong>' + escapeHtml(tripTimingRange(trip)) + "</strong></article>",
+      '    <article class="detail-signal"><span>Planung</span><strong>' + escapeHtml(tripPlanningLabel(trip)) + "</strong></article>",
       '    <article class="detail-signal"><span>Freie Plaetze</span><strong>' + trip.seats + "</strong></article>",
       '    <article class="detail-signal"><span>Kontakt</span><strong>' + escapeHtml(unlockLabel(trip.contactUnlock)) + "</strong></article>",
       "  </div>",
@@ -626,6 +659,10 @@
       '    <div>',
       '      <p class="eyebrow">Reisekonstellation</p>',
       '      <p class="trip-copy">Startet aktuell als <strong>' + escapeHtml(groupTypeLabel(trip)) + "</strong>.</p>",
+      "    </div>",
+      '    <div>',
+      '      <p class="eyebrow">Terminmodell</p>',
+      '      <p class="trip-copy"><strong>' + escapeHtml(tripTimingLabel(trip)) + "</strong> - " + escapeHtml(tripPlanningLabel(trip)) + "</p>",
       "    </div>",
       '    <div>',
       '      <p class="eyebrow">Zielgruppen</p>',
@@ -769,9 +806,35 @@
     const form = document.getElementById("tripForm");
     const message = document.getElementById("createMessage");
     const tripPicker = createTripPickerMap();
+    const timingModeSelect = document.getElementById("timingModeSelect");
+    const timingHint = document.getElementById("timingHint");
+    const startLabel = form ? form.querySelector('input[name="startDate"]').previousElementSibling : null;
+    const endLabel = form ? form.querySelector('input[name="endDate"]').previousElementSibling : null;
 
     if (!form || !message) {
       return;
+    }
+
+    function updateTimingUi() {
+      if (!timingModeSelect || !timingHint || !startLabel || !endLabel) {
+        return;
+      }
+
+      if (timingModeSelect.value === "flexible") {
+        startLabel.textContent = "Fruehester Start";
+        endLabel.textContent = "Spaeteste Rueckkehr";
+        timingHint.textContent = "Du bietest dich flexibel in einem Zeitraum an. Die genauen Tage koennt ihr spaeter zusammen festlegen.";
+        return;
+      }
+
+      startLabel.textContent = "Startdatum";
+      endLabel.textContent = "Enddatum";
+      timingHint.textContent = "Du stellst einen Trip mit festen Daten ein.";
+    }
+
+    if (timingModeSelect) {
+      timingModeSelect.addEventListener("change", updateTimingUi);
+      updateTimingUi();
     }
 
     form.addEventListener("submit", function (event) {
@@ -801,6 +864,7 @@
         country: String(data.get("country")).trim(),
         startDate: data.get("startDate"),
         endDate: data.get("endDate"),
+        timingMode: data.get("timingMode"),
         seats: Number(data.get("seats")),
         budgetPerPerson: Number(data.get("budgetPerPerson")),
         lat: Number(data.get("lat")),
@@ -820,6 +884,7 @@
       if (tripPicker) {
         tripPicker.reset();
       }
+      updateTimingUi();
       message.classList.remove("is-error");
       message.textContent = 'Reise gespeichert. Du findest sie jetzt in "Reisen" und im Profil.';
     });
@@ -860,7 +925,7 @@
         return [
           '<div class="stack-item">',
           "  <strong>" + escapeHtml(trip.title) + "</strong>",
-          '  <p class="trip-copy">' + escapeHtml(trip.startCity) + " -> " + escapeHtml(trip.destinationCity) + " | " + escapeHtml(formatRange(trip.startDate, trip.endDate)) + "</p>",
+          '  <p class="trip-copy">' + escapeHtml(trip.startCity) + " -> " + escapeHtml(trip.destinationCity) + " | " + escapeHtml(tripTimingRange(trip)) + "</p>",
           '  <a class="text-link" href="reise-detail.html?id=' + encodeURIComponent(trip.id) + '">Zur Detailseite</a>',
           "</div>"
         ].join("");
