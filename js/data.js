@@ -241,6 +241,10 @@ window.AppData = {
       tripId: "t1",
       applicantName: "Sina",
       message: "Ich reise gerne leicht und wuerde die Unterkunftskosten fair teilen.",
+      contactMode: "fit-check",
+      privacyStage: "Alias sichtbar",
+      preferredWindow: "Abends ab 19 Uhr",
+      nextStep: "Kurzprofil und Budgetvorstellung zuerst im App-Chat",
       status: "Offen"
     },
     {
@@ -248,6 +252,10 @@ window.AppData = {
       tripId: "t2",
       applicantName: "Jonas",
       message: "Ich uebernehme gerne Fahrten und bin sehr unkompliziert.",
+      contactMode: "app-chat",
+      privacyStage: "Anonym",
+      preferredWindow: "Morgens",
+      nextStep: "Erst Route und Kosten splitten, dann Kontaktdaten pruefen",
       status: "Offen"
     },
     {
@@ -255,6 +263,10 @@ window.AppData = {
       tripId: "t7",
       applicantName: "Lara",
       message: "Ich suche genau so einen Mix aus Stadt und Meer und plane gern mit.",
+      contactMode: "contact-unlock",
+      privacyStage: "Kurzprofil sichtbar",
+      preferredWindow: "Nach Feierabend",
+      nextStep: "Bei beidseitigem Okay wird der geschuetzte Kontakt freigeschaltet",
       status: "Offen"
     },
     {
@@ -262,6 +274,10 @@ window.AppData = {
       tripId: "t10",
       applicantName: "Mert",
       message: "Wellness und ruhige Trips passen gut zu mir. Ich bin beim Organisieren sehr verlaesslich.",
+      contactMode: "fit-check",
+      privacyStage: "Alias sichtbar",
+      preferredWindow: "Flexible Zeiten",
+      nextStep: "Zuerst Erwartungen und Tempo abgleichen, dann Familien-Details teilen",
       status: "Offen"
     }
   ]

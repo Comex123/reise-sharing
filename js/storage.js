@@ -74,6 +74,17 @@
     return requests;
   }
 
+  function saveRequests(requests) {
+    write(KEYS.requests, requests);
+  }
+
+  function addRequest(request) {
+    const requests = getRequests();
+    requests.unshift(request);
+    saveRequests(requests);
+    return request;
+  }
+
   function getProfile() {
     const profile = read(KEYS.profile, window.AppData.users[0]);
     write(KEYS.profile, profile);
@@ -85,6 +96,8 @@
     saveTrips,
     addTrip,
     getRequests,
+    saveRequests,
+    addRequest,
     getProfile
   };
 })();

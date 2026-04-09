@@ -63,10 +63,20 @@
     return window.StorageApi.getRequests();
   }
 
+  function addRequest(request) {
+    return window.StorageApi.addRequest(request);
+  }
+
   function getHostById(hostId) {
     return window.AppData.users.find(function (user) {
       return user.id === hostId;
     }) || window.AppData.users[0];
+  }
+
+  function getTripById(tripId) {
+    return getTrips().find(function (trip) {
+      return trip.id === tripId;
+    });
   }
 
   function unlockLabel(value) {
@@ -79,6 +89,16 @@
 
   function groupTypeLabel(trip) {
     return trip.groupType || "Offen";
+  }
+
+  function contactModeLabel(mode) {
+    const labels = {
+      "app-chat": "Anonymer App-Chat",
+      "fit-check": "Match-Check",
+      "contact-unlock": "Kontaktfreigabe spaeter"
+    };
+
+    return labels[mode] || "Kontaktanfrage";
   }
 
   function legacyAudienceLabel(value) {
@@ -110,6 +130,60 @@
     }
 
     return ["Offen"];
+  }
+
+  function smartContactPlan(trip) {
+    const audiences = tripAudiences(trip);
+
+    if (audiences.includes("Familien") || audiences.includes("Alleinerziehend") || groupTypeLabel(trip) === "Alleinerziehend") {
+      return {
+        recommendedMode: "fit-check",
+        title: "Ruhiger Kennenlern-Flow",
+        description: "Erst Erwartungen abgleichen, dann langsam mehr freigeben.",
+        steps: [
+          "Nur Alias und erste Frage werden geteilt.",
+          "Dann folgt ein kurzer Match-Check zu Tempo, Alltag und Erwartungen.",
+          "Erst danach koennen private Kontaktdaten freigegeben werden."
+        ]
+      };
+    }
+
+    if (audiences.includes("Studenten") || trip.styles.includes("Budget")) {
+      return {
+        recommendedMode: "app-chat",
+        title: "Budget-Check zuerst",
+        description: "Ideal fuer flexible Trips mit Kostenfokus und schnellem Erstkontakt.",
+        steps: [
+          "Start ueber Alias statt private Nummer.",
+          "Kurz Budget, Route und Unterkunft abgleichen.",
+          "Kontaktfreigabe nur bei beidseitigem Interesse."
+        ]
+      };
+    }
+
+    if (audiences.includes("Paare") || groupTypeLabel(trip) === "Paar") {
+      return {
+        recommendedMode: "contact-unlock",
+        title: "Kurzprofil vor direktem Kontakt",
+        description: "Erst Intro austauschen, dann Kontakte spaeter freigeben.",
+        steps: [
+          "Kurze Intro-Nachricht senden.",
+          "Gastgeber sieht zuerst nur Profilkarte und Verfuegbarkeit.",
+          "Danach kann ein geschuetzter Kontakt freigeschaltet werden."
+        ]
+      };
+    }
+
+    return {
+      recommendedMode: "app-chat",
+      title: "Anonym starten",
+      description: "Der sichere Standard fuer erste Kontakte in der App.",
+      steps: [
+        "Zuerst nur Alias und Intro sichtbar.",
+        "Dann gemeinsamer Match-Check in der App.",
+        "Kontaktdaten erst nach beidseitigem Okay."
+      ]
+    };
   }
 
   function tripCardMarkup(trip) {
@@ -276,6 +350,7 @@
     }
 
     const host = getHostById(trip.hostId);
+    const contactPlan = smartContactPlan(trip);
     const styleMarkup = trip.styles.map(function (style) {
       return '<span class="trip-chip">' + escapeHtml(style) + "</span>";
     }).join("");
@@ -312,7 +387,7 @@
       "    </div>",
       "  </div>",
       '  <div class="trip-actions">',
-      '    <button class="button button-primary" type="button" id="requestButton">Anfrage senden</button>',
+      '    <button class="button button-primary" type="button" id="requestButton">Smart Connect starten</button>',
       '    <a class="button button-secondary" href="reisen.html">Zurueck zur Liste</a>',
       "  </div>",
       "</article>",
@@ -343,13 +418,105 @@
       "      <li>Treffpunkt und private Kontaktdaten</li>",
       "    </ul>",
       "  </div>",
+      '  <div class="smart-contact-shell">',
+      '    <p class="eyebrow">Smart Connect</p>',
+      '    <h3>' + escapeHtml(contactPlan.title) + "</h3>",
+      '    <p class="trip-copy">' + escapeHtml(contactPlan.description) + "</p>",
+      '    <ul class="smart-step-list">' + contactPlan.steps.map(function (step) {
+        return "<li>" + escapeHtml(step) + "</li>";
+      }).join("") + "</ul>",
+      '    <form id="smartConnectForm" class="smart-connect-form">',
+      '      <input type="hidden" name="contactMode" id="contactModeInput" value="' + escapeHtml(contactPlan.recommendedMode) + '" />',
+      '      <div class="contact-mode-grid">',
+      '        <button type="button" class="contact-mode" data-contact-mode="app-chat">Anonym starten</button>',
+      '        <button type="button" class="contact-mode" data-contact-mode="fit-check">Match-Check</button>',
+      '        <button type="button" class="contact-mode" data-contact-mode="contact-unlock">Spaeter freigeben</button>',
+      "      </div>",
+      '      <div class="smart-form-grid">',
+      '        <label>',
+      '          <span>Dein Name oder Alias</span>',
+      '          <input name="applicantName" type="text" placeholder="z. B. Lina oder TravelLina" required />',
+      "        </label>",
+      '        <label>',
+      '          <span>Wann passt dir Kontakt?</span>',
+      '          <input name="preferredWindow" type="text" placeholder="z. B. abends oder flexibel" required />',
+      "        </label>",
+      "      </div>",
+      '      <label>',
+      '        <span>Erste Nachricht</span>',
+      '        <textarea name="message" rows="4" placeholder="Warum passt dieser Trip gut zu dir?" required></textarea>',
+      "      </label>",
+      '      <button class="button button-primary" type="submit">Sicheren Erstkontakt senden</button>',
+      '      <p id="smartConnectMessage" class="status-message smart-connect-message"></p>',
+      "    </form>",
+      "  </div>",
       "</aside>"
     ].join("");
 
     const requestButton = document.getElementById("requestButton");
-    requestButton.addEventListener("click", function () {
-      window.alert("Fuer die Reise \"" + trip.title + "\" wuerde hier eine Anfrage an den Gastgeber gesendet werden.");
+    const smartForm = document.getElementById("smartConnectForm");
+    const smartMessage = document.getElementById("smartConnectMessage");
+    const modeInput = document.getElementById("contactModeInput");
+    const modeButtons = Array.prototype.slice.call(document.querySelectorAll("[data-contact-mode]"));
+
+    function updateContactMode(mode) {
+      modeInput.value = mode;
+      modeButtons.forEach(function (button) {
+        const isActive = button.dataset.contactMode === mode;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
+
+      if (smartMessage) {
+        smartMessage.classList.remove("is-error");
+        smartMessage.textContent = "Empfohlen: " + contactModeLabel(mode);
+      }
+    }
+
+    updateContactMode(contactPlan.recommendedMode);
+
+    modeButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        updateContactMode(button.dataset.contactMode);
+      });
     });
+
+    requestButton.addEventListener("click", function () {
+      if (smartForm) {
+        smartForm.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+
+    if (smartForm && smartMessage) {
+      smartForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const formData = new FormData(smartForm);
+        const request = {
+          id: "r" + Date.now(),
+          tripId: trip.id,
+          applicantName: String(formData.get("applicantName")).trim(),
+          message: String(formData.get("message")).trim(),
+          contactMode: formData.get("contactMode"),
+          privacyStage: formData.get("contactMode") === "app-chat" ? "Anonym" : "Alias sichtbar",
+          preferredWindow: String(formData.get("preferredWindow")).trim(),
+          nextStep: contactPlan.steps[1],
+          status: "Neu"
+        };
+
+        if (!request.applicantName || !request.message || !request.preferredWindow) {
+          smartMessage.textContent = "Bitte Alias, Kontaktzeit und Nachricht ausfuellen.";
+          smartMessage.classList.add("is-error");
+          return;
+        }
+
+        addRequest(request);
+        smartForm.reset();
+        updateContactMode(contactPlan.recommendedMode);
+        smartMessage.classList.remove("is-error");
+        smartMessage.textContent = "Smart Connect gestartet. Zuerst werden nur Alias, Kontaktweg und Intro geteilt.";
+      });
+    }
   }
 
   function initCreatePage() {
@@ -447,10 +614,15 @@
       renderEmptyList(requestList, "Aktuell gibt es keine offenen Anfragen.");
     } else {
       requestList.innerHTML = requests.map(function (request) {
+        const trip = getTripById(request.tripId);
+
         return [
           '<div class="stack-item">',
           "  <strong>" + escapeHtml(request.applicantName) + "</strong>",
+          '  <p class="trip-copy">' + escapeHtml(trip ? trip.title : "Allgemeine Anfrage") + "</p>",
           '  <p class="trip-copy">' + escapeHtml(request.message) + "</p>",
+          '  <p class="mini-note">Kontaktweg: ' + escapeHtml(contactModeLabel(request.contactMode || "")) + " | " + escapeHtml(request.privacyStage || "Standard") + "</p>",
+          '  <p class="mini-note">Naechster Schritt: ' + escapeHtml(request.nextStep || "Kontakt pruefen") + "</p>",
           '  <span class="status-pill">' + escapeHtml(request.status) + "</span>",
           "</div>"
         ].join("");

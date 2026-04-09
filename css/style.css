@@ -719,6 +719,66 @@ textarea {
   border: 1px solid var(--line);
 }
 
+.smart-contact-shell {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  background: rgba(10, 19, 23, 0.86);
+  border: 1px solid rgba(121, 215, 207, 0.14);
+}
+
+.smart-step-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+}
+
+.smart-connect-form {
+  display: grid;
+  gap: 14px;
+}
+
+.smart-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.contact-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.contact-mode {
+  min-height: 52px;
+  padding: 10px 12px;
+  border: 1px solid rgba(121, 215, 207, 0.14);
+  border-radius: 18px;
+  color: var(--text);
+  background: rgba(7, 16, 19, 0.92);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.contact-mode:hover {
+  transform: translateY(-1px);
+}
+
+.contact-mode.is-active {
+  color: var(--white);
+  border-color: transparent;
+  background: linear-gradient(135deg, #0f5f61, #1e8b84, #ff8b5d);
+  box-shadow: 0 12px 22px rgba(29, 106, 103, 0.22);
+}
+
+.smart-connect-message {
+  margin: 0;
+}
+
 .detail-sidebar {
   align-self: start;
 }
@@ -1230,7 +1290,9 @@ textarea::placeholder {
   .app-quick-grid,
   .app-flow-grid,
   .app-stat-row,
-  .app-filter-panel .filter-row {
+  .app-filter-panel .filter-row,
+  .smart-form-grid,
+  .contact-mode-grid {
     grid-template-columns: 1fr;
   }
 
