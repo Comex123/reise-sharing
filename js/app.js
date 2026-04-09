@@ -365,6 +365,69 @@
     return labels[mode] || "Kontaktanfrage";
   }
 
+  function normalizeTransportMode(value) {
+    const allowed = ["car", "train", "plane", "bus", "ferry", "open"];
+    return allowed.includes(value) ? value : "open";
+  }
+
+  function transportModeLabel(value) {
+    const labels = {
+      car: "Auto",
+      train: "Bahn",
+      plane: "Flugzeug",
+      bus: "Bus",
+      ferry: "Faehre",
+      open: "Noch offen"
+    };
+
+    return labels[normalizeTransportMode(value)] || "Noch offen";
+  }
+
+  function inferTransportMode(trip) {
+    const noteText = String(trip && trip.notes || "").toLowerCase();
+
+    if (noteText.includes("flug")) {
+      return "plane";
+    }
+
+    if (noteText.includes("bahn") || noteText.includes("zug")) {
+      return "train";
+    }
+
+    if (noteText.includes("faehr")) {
+      return "ferry";
+    }
+
+    if (noteText.includes("bus")) {
+      return "bus";
+    }
+
+    if (noteText.includes("auto") || noteText.includes("van") || noteText.includes("mietwagen")) {
+      return "car";
+    }
+
+    return "open";
+  }
+
+  function tripArrivalMode(trip) {
+    return normalizeTransportMode(trip && trip.arrivalMode ? trip.arrivalMode : inferTransportMode(trip));
+  }
+
+  function tripDepartureMode(trip) {
+    return normalizeTransportMode(trip && trip.departureMode ? trip.departureMode : tripArrivalMode(trip));
+  }
+
+  function tripTransportSummary(trip) {
+    const arrival = tripArrivalMode(trip);
+    const departure = tripDepartureMode(trip);
+
+    if (arrival === departure) {
+      return transportModeLabel(arrival) + " hin & zurueck";
+    }
+
+    return "Hin: " + transportModeLabel(arrival) + " | Zurueck: " + transportModeLabel(departure);
+  }
+
   function legacyAudienceLabel(value) {
     const labels = {
       Single: "Singles",
@@ -807,6 +870,7 @@
       '    <span class="meta-pill">' + escapeHtml(tripTravelModeLabel(trip)) + '</span>',
       '    <span class="meta-pill">' + escapeHtml(tripTimingLabel(trip)) + '</span>',
       '    <span class="meta-pill">' + escapeHtml(tripPlanningLabel(trip)) + '</span>',
+      '    <span class="meta-pill">' + escapeHtml(tripTransportSummary(trip)) + '</span>',
       '    <span class="meta-pill">' + escapeHtml(tripSeatLabel(trip)) + '</span>',
       hasTripLocation(trip) ? '    <span class="meta-pill">Marker live</span>' : "",
       costPlan && tripListingType(trip) !== "request" ? '    <span class="meta-pill">Kostenplan live: ' + escapeHtml(euro(costPerPerson(normalizeCostPlan(costPlan, trip)))) + "</span>" : "",
@@ -871,6 +935,8 @@
     const groupTypeSelect = document.getElementById("filterGroupType");
     const timingSelect = document.getElementById("filterTiming");
     const travelModeSelect = document.getElementById("filterTravelMode");
+    const arrivalModeSelect = document.getElementById("filterArrivalMode");
+    const departureModeSelect = document.getElementById("filterDepartureMode");
     const listingTypeSelect = document.getElementById("filterListingType");
     const audienceButtons = Array.prototype.slice.call(document.querySelectorAll("[data-audience]"));
     const clearFiltersButton = document.getElementById("clearFilters");
@@ -893,6 +959,8 @@
       const groupType = groupTypeSelect.value;
       const timingMode = timingSelect.value;
       const travelMode = travelModeSelect.value;
+      const arrivalMode = arrivalModeSelect.value;
+      const departureMode = departureModeSelect.value;
       const listingType = listingTypeSelect.value;
       const selectedAudience = activeAudience;
       const filtered = getTrips().filter(function (trip) {
@@ -903,9 +971,11 @@
         const matchesGroupType = !groupType || groupTypeLabel(trip) === groupType;
         const matchesTiming = !timingMode || tripTimingMode(trip) === timingMode;
         const matchesTravelMode = !travelMode || tripTravelMode(trip) === travelMode;
+        const matchesArrivalMode = !arrivalMode || tripArrivalMode(trip) === arrivalMode;
+        const matchesDepartureMode = !departureMode || tripDepartureMode(trip) === departureMode;
         const matchesListingType = !listingType || tripListingType(trip) === listingType;
         const matchesAudience = !selectedAudience || tripAudiences(trip).includes(selectedAudience);
-        return matchesDestination && matchesBudget && matchesStyle && matchesGroupType && matchesTiming && matchesTravelMode && matchesListingType && matchesAudience;
+        return matchesDestination && matchesBudget && matchesStyle && matchesGroupType && matchesTiming && matchesTravelMode && matchesArrivalMode && matchesDepartureMode && matchesListingType && matchesAudience;
       });
 
       setText("tripCount", filtered.length + (filtered.length === 1 ? " MatchTrip" : " MatchTrips"));
@@ -920,7 +990,7 @@
       }
     }
 
-    [destinationInput, budgetInput, styleSelect, groupTypeSelect, timingSelect, travelModeSelect, listingTypeSelect].forEach(function (element) {
+    [destinationInput, budgetInput, styleSelect, groupTypeSelect, timingSelect, travelModeSelect, arrivalModeSelect, departureModeSelect, listingTypeSelect].forEach(function (element) {
       element.addEventListener("input", applyFilters);
       element.addEventListener("change", applyFilters);
     });
@@ -940,6 +1010,8 @@
         groupTypeSelect.value = "";
         timingSelect.value = "";
         travelModeSelect.value = "";
+        arrivalModeSelect.value = "";
+        departureModeSelect.value = "";
         listingTypeSelect.value = "";
         updateAudienceButtons("");
         applyFilters();
@@ -1063,6 +1135,7 @@
       '    <article class="detail-signal"><span>Planung</span><strong>' + escapeHtml(tripPlanningLabel(trip)) + "</strong></article>",
       '    <article class="detail-signal"><span>Typ</span><strong>' + escapeHtml(tripListingLabel(trip)) + "</strong></article>",
       '    <article class="detail-signal"><span>Matchs</span><strong>' + escapeHtml(tripSeatLabel(trip)) + "</strong></article>",
+      '    <article class="detail-signal"><span>An- und Abreise</span><strong>' + escapeHtml(tripTransportSummary(trip)) + "</strong></article>",
       '    <article class="detail-signal"><span>Kontakt</span><strong>' + escapeHtml(unlockLabel(trip.contactUnlock)) + "</strong></article>",
       "  </div>",
       '  <p class="trip-copy">' + escapeHtml(trip.notes) + "</p>",
@@ -1083,6 +1156,10 @@
       '    <div>',
       '      <p class="eyebrow">Reiseoption</p>',
       '      <p class="trip-copy"><strong>' + escapeHtml(tripTravelModeLabel(trip)) + "</strong> - " + escapeHtml(tripTravelModeHint(trip)) + "</p>",
+      "    </div>",
+      '    <div>',
+      '      <p class="eyebrow">Mobilitaet</p>',
+      '      <p class="trip-copy"><strong>Anreise:</strong> ' + escapeHtml(transportModeLabel(tripArrivalMode(trip))) + ' | <strong>Abreise:</strong> ' + escapeHtml(transportModeLabel(tripDepartureMode(trip))) + "</p>",
       "    </div>",
       '    <div>',
       '      <p class="eyebrow">Zielgruppen</p>',
@@ -1336,6 +1413,8 @@
     const timingHint = document.getElementById("timingHint");
     const travelModeSelect = document.getElementById("travelModeSelect");
     const travelModeHint = document.getElementById("travelModeHint");
+    const arrivalModeSelect = document.getElementById("arrivalModeSelect");
+    const departureModeSelect = document.getElementById("departureModeSelect");
     const listingTypeSelect = document.getElementById("listingTypeSelect");
     const listingTypeHint = document.getElementById("listingTypeHint");
     const destinationInput = form ? form.querySelector('input[name="destinationCity"]') : null;
@@ -1422,6 +1501,14 @@
           updateTravelModeUi();
         }
 
+        if (arrivalModeSelect) {
+          arrivalModeSelect.value = "open";
+        }
+
+        if (departureModeSelect) {
+          departureModeSelect.value = "open";
+        }
+
         return;
       }
 
@@ -1478,6 +1565,8 @@
         endDate: data.get("endDate"),
         timingMode: data.get("timingMode"),
         travelMode: data.get("travelMode"),
+        arrivalMode: normalizeTransportMode(data.get("arrivalMode")),
+        departureMode: normalizeTransportMode(data.get("departureMode")),
         seats: Number(data.get("seats")),
         budgetPerPerson: Number(data.get("budgetPerPerson")),
         lat: Number(data.get("lat")),
@@ -1576,6 +1665,7 @@
           "  <strong>" + escapeHtml(trip.title) + "</strong>",
           '  <p class="trip-copy stack-item-route">' + escapeHtml(tripRouteLabel(trip)) + " | " + escapeHtml(tripTimingRange(trip)) + "</p>",
           '  <p class="mini-note stack-item-copy">' + escapeHtml(tripListingHint(trip)) + " | " + escapeHtml(tripSeatLabel(trip)) + "</p>",
+          '  <p class="mini-note stack-item-copy">' + escapeHtml(tripTransportSummary(trip)) + "</p>",
           trip.regionLabel ? '  <p class="mini-note stack-item-copy">Region: ' + escapeHtml(trip.regionLabel) + " | " + escapeHtml(trip.country) + "</p>" : '  <p class="mini-note stack-item-copy">' + escapeHtml(trip.country) + " | " + escapeHtml(tripTravelModeLabel(trip)) + "</p>",
           '  <a class="text-link" href="reise-detail.html?id=' + encodeURIComponent(trip.id) + '">Zur Detailseite</a>',
           "</div>"
