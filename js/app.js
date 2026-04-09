@@ -63,8 +63,16 @@
     return window.StorageApi.getRequests();
   }
 
+  function getCostPlans() {
+    return window.StorageApi.getCostPlans();
+  }
+
   function addRequest(request) {
     return window.StorageApi.addRequest(request);
+  }
+
+  function saveCostPlan(costPlan) {
+    return window.StorageApi.saveCostPlan(costPlan);
   }
 
   function getHostById(hostId) {
@@ -76,6 +84,12 @@
   function getTripById(tripId) {
     return getTrips().find(function (trip) {
       return trip.id === tripId;
+    });
+  }
+
+  function getCostPlanByTripId(tripId) {
+    return getCostPlans().find(function (costPlan) {
+      return costPlan.tripId === tripId;
     });
   }
 
@@ -117,6 +131,82 @@
     }
 
     return tripDays(trip) + " Tage";
+  }
+
+  function splitMethodLabel(method) {
+    const labels = {
+      "equal-all": "Alles gleich teilen",
+      "host-prepays": "Host zahlt zuerst, dann Ausgleich",
+      "self-pay-food": "Food individuell, Rest geteilt"
+    };
+
+    return labels[method] || "Alles gleich teilen";
+  }
+
+  function splitMethodHint(method) {
+    const hints = {
+      "equal-all": "Alle Hauptkosten laufen in einen gemeinsamen Topf und werden direkt pro Kopf angezeigt.",
+      "host-prepays": "Unterkunft oder Tickets kann eine Person zuerst zahlen, die App zeigt danach den fairen Ausgleich pro Kopf.",
+      "self-pay-food": "Fahrt, Unterkunft und Extras werden geteilt. Essen bleibt bewusst flexibel pro Person."
+    };
+
+    return hints[method] || hints["equal-all"];
+  }
+
+  function createDefaultCostPlan(trip) {
+    const participantCount = Math.max(2, Number(trip.seats || 1) + 1);
+    const total = Math.max(Number(trip.budgetPerPerson || 0) * participantCount, 0);
+    const transport = Math.round(total * 0.24);
+    const stay = Math.round(total * 0.5);
+    const food = Math.round(total * 0.18);
+    const extras = Math.max(total - transport - stay - food, 0);
+
+    return {
+      id: "cp-" + trip.id,
+      tripId: trip.id,
+      participantCount: participantCount,
+      splitMethod: "equal-all",
+      transport: transport,
+      stay: stay,
+      food: food,
+      extras: extras,
+      note: "Vorlaeufige App-Aufteilung auf Basis des angegebenen Budgets.",
+      status: "Noch offen"
+    };
+  }
+
+  function normalizeCostPlan(rawPlan, trip) {
+    const basePlan = rawPlan || createDefaultCostPlan(trip);
+
+    return {
+      id: basePlan.id || "cp-" + trip.id,
+      tripId: trip.id,
+      participantCount: Math.max(1, Number(basePlan.participantCount || 1)),
+      splitMethod: basePlan.splitMethod || "equal-all",
+      transport: Math.max(0, Number(basePlan.transport || 0)),
+      stay: Math.max(0, Number(basePlan.stay || 0)),
+      food: Math.max(0, Number(basePlan.food || 0)),
+      extras: Math.max(0, Number(basePlan.extras || 0)),
+      note: String(basePlan.note || "").trim(),
+      status: basePlan.status || "Noch offen"
+    };
+  }
+
+  function costPlanTotal(plan) {
+    return Number(plan.transport || 0) + Number(plan.stay || 0) + Number(plan.food || 0) + Number(plan.extras || 0);
+  }
+
+  function costPlanChargeableTotal(plan) {
+    if (plan.splitMethod === "self-pay-food") {
+      return Number(plan.transport || 0) + Number(plan.stay || 0) + Number(plan.extras || 0);
+    }
+
+    return costPlanTotal(plan);
+  }
+
+  function costPerPerson(plan) {
+    const participantCount = Math.max(1, Number(plan.participantCount || 1));
+    return Math.round(costPlanChargeableTotal(plan) / participantCount);
   }
 
   function contactModeLabel(mode) {
@@ -451,6 +541,7 @@
 
   function tripCardMarkup(trip) {
     const host = getHostById(trip.hostId);
+    const costPlan = getCostPlanByTripId(trip.id);
     const safeId = encodeURIComponent(trip.id);
     const safeStyles = trip.styles.map(function (style) {
       return '<span class="trip-chip">' + escapeHtml(style) + '</span>';
@@ -478,6 +569,7 @@
       '    <span class="meta-pill">' + escapeHtml(tripPlanningLabel(trip)) + '</span>',
       '    <span class="meta-pill">' + trip.seats + ' freie Plaetze</span>',
       hasTripLocation(trip) ? '    <span class="meta-pill">Marker live</span>' : "",
+      costPlan ? '    <span class="meta-pill">Kostenplan live: ' + escapeHtml(euro(costPerPerson(normalizeCostPlan(costPlan, trip)))) + "</span>" : "",
       '    <span class="meta-pill">Startet als: ' + escapeHtml(groupTypeLabel(trip)) + '</span>',
       '    <span class="meta-pill">Zielgruppen: ' + safeAudiences + '</span>',
       '  </div>',
@@ -626,6 +718,7 @@
 
     const host = getHostById(trip.hostId);
     const contactPlan = smartContactPlan(trip);
+    const costPlan = normalizeCostPlan(getCostPlanByTripId(trip.id), trip);
     const styleMarkup = trip.styles.map(function (style) {
       return '<span class="trip-chip">' + escapeHtml(style) + "</span>";
     }).join("");
@@ -669,6 +762,37 @@
       '      <div class="detail-stats">' + audienceMarkup + "</div>",
       "    </div>",
       "  </div>",
+      '  <section class="cost-plan-shell">',
+      '    <div class="app-section-header compact-header">',
+      '      <div>',
+      '        <p class="eyebrow">Kostenklarheit</p>',
+      '        <h3>Kostenteilung direkt in der App</h3>',
+      "      </div>",
+      '      <span class="status-pill" id="costPlanStatusValue">' + escapeHtml(costPlan.status) + "</span>",
+      "    </div>",
+      '    <div class="cost-kpi-grid">',
+      '      <article class="cost-kpi"><span>Gesamt</span><strong id="costTotalValue">' + euro(costPlanTotal(costPlan)) + "</strong></article>",
+      '      <article class="cost-kpi"><span>Teilbar</span><strong id="costSharedValue">' + euro(costPlanChargeableTotal(costPlan)) + "</strong></article>",
+      '      <article class="cost-kpi"><span>Pro Person</span><strong id="costPerPersonValue">' + euro(costPerPerson(costPlan)) + "</strong></article>",
+      "    </div>",
+      '    <p id="costSplitHelp" class="mini-note">' + escapeHtml(splitMethodHint(costPlan.splitMethod)) + "</p>",
+      '    <form id="costPlanForm" class="cost-plan-form">',
+      '      <div class="cost-plan-grid">',
+      '        <label><span>Personen gesamt</span><input name="participantCount" type="number" min="1" value="' + escapeHtml(costPlan.participantCount) + '" required /></label>',
+      '        <label><span>Anreise</span><input name="transport" type="number" min="0" step="10" value="' + escapeHtml(costPlan.transport) + '" required /></label>',
+      '        <label><span>Unterkunft</span><input name="stay" type="number" min="0" step="10" value="' + escapeHtml(costPlan.stay) + '" required /></label>',
+      '        <label><span>Food</span><input name="food" type="number" min="0" step="10" value="' + escapeHtml(costPlan.food) + '" required /></label>',
+      '        <label><span>Extras</span><input name="extras" type="number" min="0" step="10" value="' + escapeHtml(costPlan.extras) + '" required /></label>',
+      '        <label><span>Abrechnungsmodell</span><select name="splitMethod"><option value="equal-all"' + (costPlan.splitMethod === "equal-all" ? " selected" : "") + '>Alles gleich teilen</option><option value="host-prepays"' + (costPlan.splitMethod === "host-prepays" ? " selected" : "") + '>Host zahlt zuerst</option><option value="self-pay-food"' + (costPlan.splitMethod === "self-pay-food" ? " selected" : "") + '>Food individuell</option></select></label>',
+      "      </div>",
+      '      <label><span>Notiz zur Kostenteilung</span><textarea name="note" rows="3" placeholder="z. B. Unterkunft bucht der Host, Food bleibt flexibel.">' + escapeHtml(costPlan.note) + "</textarea></label>",
+      '      <div class="form-actions">',
+      '        <button class="button button-primary" type="submit">Kostenplan speichern</button>',
+      '        <span class="mini-note">Die App zeigt dann allen transparent, was geteilt wird.</span>',
+      "      </div>",
+      '      <p id="costPlanMessage" class="status-message smart-connect-message"></p>',
+      "    </form>",
+      "  </section>",
       '  <div class="trip-actions">',
       '    <button class="button button-primary" type="button" id="requestButton">Smart Connect starten</button>',
       '    <a class="button button-secondary" href="reisen.html">Zurueck zur Liste</a>',
@@ -741,6 +865,45 @@
     const smartMessage = document.getElementById("smartConnectMessage");
     const modeInput = document.getElementById("contactModeInput");
     const modeButtons = Array.prototype.slice.call(document.querySelectorAll("[data-contact-mode]"));
+    const costPlanForm = document.getElementById("costPlanForm");
+    const costPlanMessage = document.getElementById("costPlanMessage");
+    const costTotalValue = document.getElementById("costTotalValue");
+    const costSharedValue = document.getElementById("costSharedValue");
+    const costPerPersonValue = document.getElementById("costPerPersonValue");
+    const costPlanStatusValue = document.getElementById("costPlanStatusValue");
+    const costSplitHelp = document.getElementById("costSplitHelp");
+
+    function readCostPlanForm(statusOverride) {
+      if (!costPlanForm) {
+        return normalizeCostPlan(costPlan, trip);
+      }
+
+      const formData = new FormData(costPlanForm);
+      return normalizeCostPlan({
+        id: costPlan.id,
+        tripId: trip.id,
+        participantCount: formData.get("participantCount"),
+        splitMethod: formData.get("splitMethod"),
+        transport: formData.get("transport"),
+        stay: formData.get("stay"),
+        food: formData.get("food"),
+        extras: formData.get("extras"),
+        note: formData.get("note"),
+        status: statusOverride || costPlan.status || "Noch offen"
+      }, trip);
+    }
+
+    function updateCostPlanPreview(plan) {
+      if (!costTotalValue || !costSharedValue || !costPerPersonValue || !costPlanStatusValue || !costSplitHelp) {
+        return;
+      }
+
+      costTotalValue.textContent = euro(costPlanTotal(plan));
+      costSharedValue.textContent = euro(costPlanChargeableTotal(plan));
+      costPerPersonValue.textContent = euro(costPerPerson(plan));
+      costPlanStatusValue.textContent = plan.status;
+      costSplitHelp.textContent = splitMethodHint(plan.splitMethod);
+    }
 
     function updateContactMode(mode) {
       modeInput.value = mode;
@@ -769,6 +932,31 @@
         smartForm.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     });
+
+    if (costPlanForm) {
+      updateCostPlanPreview(costPlan);
+
+      costPlanForm.addEventListener("input", function () {
+        updateCostPlanPreview(readCostPlanForm("Entwurf"));
+      });
+
+      costPlanForm.addEventListener("change", function () {
+        updateCostPlanPreview(readCostPlanForm("Entwurf"));
+      });
+
+      costPlanForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const nextPlan = readCostPlanForm("Transparent");
+        saveCostPlan(nextPlan);
+        updateCostPlanPreview(nextPlan);
+
+        if (costPlanMessage) {
+          costPlanMessage.classList.remove("is-error");
+          costPlanMessage.textContent = "Kostenplan gespeichert. Die App zeigt jetzt den Pro-Kopf-Betrag und das Abrechnungsmodell direkt im Trip.";
+        }
+      });
+    }
 
     if (smartForm && smartMessage) {
       smartForm.addEventListener("submit", function (event) {
@@ -894,9 +1082,10 @@
     const profileCard = document.getElementById("profileCard");
     const hostedTrips = document.getElementById("hostedTrips");
     const requestList = document.getElementById("requestList");
+    const costPlanList = document.getElementById("costPlanList");
     const profile = getProfile();
 
-    if (!profileCard || !hostedTrips || !requestList) {
+    if (!profileCard || !hostedTrips || !requestList || !costPlanList) {
       return;
     }
 
@@ -947,6 +1136,30 @@
           '  <p class="mini-note">Kontaktweg: ' + escapeHtml(contactModeLabel(request.contactMode || "")) + " | " + escapeHtml(request.privacyStage || "Standard") + "</p>",
           '  <p class="mini-note">Naechster Schritt: ' + escapeHtml(request.nextStep || "Kontakt pruefen") + "</p>",
           '  <span class="status-pill">' + escapeHtml(request.status) + "</span>",
+          "</div>"
+        ].join("");
+      }).join("");
+    }
+
+    const ownCostPlans = getCostPlans().filter(function (costPlan) {
+      const trip = getTripById(costPlan.tripId);
+      return trip && trip.hostId === profile.id;
+    });
+
+    if (!ownCostPlans.length) {
+      renderEmptyList(costPlanList, "Noch kein Kostenplan gespeichert.");
+    } else {
+      costPlanList.innerHTML = ownCostPlans.map(function (costPlan) {
+        const trip = getTripById(costPlan.tripId);
+        const normalizedPlan = normalizeCostPlan(costPlan, trip || { id: costPlan.tripId, budgetPerPerson: 0, seats: 1 });
+
+        return [
+          '<div class="stack-item">',
+          "  <strong>" + escapeHtml(trip ? trip.title : "Allgemeiner Trip") + "</strong>",
+          '  <p class="trip-copy">' + escapeHtml(splitMethodLabel(normalizedPlan.splitMethod)) + "</p>",
+          '  <p class="mini-note">Gesamt: ' + escapeHtml(euro(costPlanTotal(normalizedPlan))) + " | Teilbar: " + escapeHtml(euro(costPlanChargeableTotal(normalizedPlan))) + "</p>",
+          '  <p class="mini-note">Pro Person: ' + escapeHtml(euro(costPerPerson(normalizedPlan))) + " | " + escapeHtml(normalizedPlan.status) + "</p>",
+          trip ? '  <a class="text-link" href="reise-detail.html?id=' + encodeURIComponent(trip.id) + '">Kostenplan oeffnen</a>' : "",
           "</div>"
         ].join("");
       }).join("");

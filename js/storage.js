@@ -2,7 +2,8 @@
   const KEYS = {
     trips: "reiseSharing.trips",
     requests: "reiseSharing.requests",
-    profile: "reiseSharing.profile"
+    profile: "reiseSharing.profile",
+    costPlans: "reiseSharing.costPlans"
   };
 
   function clone(value) {
@@ -91,6 +92,33 @@
     return profile;
   }
 
+  function getCostPlans() {
+    const storedCostPlans = read(KEYS.costPlans, []);
+    const costPlans = storedCostPlans.length ? mergeSeedItems(storedCostPlans, window.AppData.costPlans || []) : clone(window.AppData.costPlans || []);
+    write(KEYS.costPlans, costPlans);
+    return costPlans;
+  }
+
+  function saveCostPlans(costPlans) {
+    write(KEYS.costPlans, costPlans);
+  }
+
+  function saveCostPlan(costPlan) {
+    const costPlans = getCostPlans();
+    const index = costPlans.findIndex(function (entry) {
+      return entry.tripId === costPlan.tripId;
+    });
+
+    if (index >= 0) {
+      costPlans[index] = clone(costPlan);
+    } else {
+      costPlans.unshift(clone(costPlan));
+    }
+
+    saveCostPlans(costPlans);
+    return costPlan;
+  }
+
   window.StorageApi = {
     getTrips,
     saveTrips,
@@ -98,6 +126,9 @@
     getRequests,
     saveRequests,
     addRequest,
-    getProfile
+    getProfile,
+    getCostPlans,
+    saveCostPlans,
+    saveCostPlan
   };
 })();

@@ -310,5 +310,43 @@ window.AppData = {
       nextStep: "Zuerst Erwartungen und Tempo abgleichen, dann Familien-Details teilen",
       status: "Offen"
     }
+  ],
+  costPlans: [
+    {
+      id: "cp1",
+      tripId: "t1",
+      participantCount: 3,
+      splitMethod: "equal-all",
+      transport: 84,
+      stay: 186,
+      food: 60,
+      extras: 30,
+      note: "Bahn und Unterkunft werden zusammen gebucht. Food bleibt als gemeinsamer Richtwert sichtbar.",
+      status: "Transparent"
+    },
+    {
+      id: "cp2",
+      tripId: "t2",
+      participantCount: 4,
+      splitMethod: "host-prepays",
+      transport: 220,
+      stay: 480,
+      food: 160,
+      extras: 80,
+      note: "Maut, Benzin und Apartment zahlt zuerst der Host. Danach wird alles gleich in der Gruppe abgerechnet.",
+      status: "In Klaerung"
+    },
+    {
+      id: "cp3",
+      tripId: "t10",
+      participantCount: 3,
+      splitMethod: "self-pay-food",
+      transport: 36,
+      stay: 330,
+      food: 90,
+      extras: 24,
+      note: "Unterkunft und Fahrt werden sauber geteilt. Food und kleine Extras koennen vor Ort individuell bleiben.",
+      status: "Transparent"
+    }
   ]
 };

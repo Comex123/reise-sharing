@@ -731,6 +731,53 @@ textarea {
   border: 1px solid var(--line);
 }
 
+.cost-plan-shell {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  background: rgba(8, 18, 22, 0.86);
+  border: 1px solid rgba(121, 215, 207, 0.12);
+}
+
+.cost-kpi-grid,
+.cost-plan-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.cost-kpi-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cost-kpi {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(6, 14, 18, 0.84);
+  border: 1px solid rgba(121, 215, 207, 0.1);
+}
+
+.cost-kpi span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.cost-kpi strong {
+  font-size: 1.05rem;
+}
+
+.cost-plan-form {
+  display: grid;
+  gap: 14px;
+}
+
+.cost-plan-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .smart-contact-shell {
   display: grid;
   gap: 14px;
@@ -1725,6 +1772,8 @@ textarea::placeholder {
   .app-stat-row,
   .app-filter-panel .filter-row,
   .detail-signal-grid,
+  .cost-kpi-grid,
+  .cost-plan-grid,
   .smart-form-grid,
   .contact-mode-grid {
     grid-template-columns: 1fr;
