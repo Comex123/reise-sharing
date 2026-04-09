@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profil | Reise Sharing</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/data.js" defer></script>
+  <script src="js/storage.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body data-page="profile">
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">RS</span>
+      <span>Reise Sharing</span>
+    </a>
+    <nav class="site-nav">
+      <a href="reisen.html">Reisen</a>
+      <a href="reise-erstellen.html">Reise erstellen</a>
+      <a href="profil.html" aria-current="page">Profil</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="page-intro card-surface">
+      <p class="eyebrow">Persoenlicher Bereich</p>
+      <h1>Profil, eigene Reisen und offene Anfragen</h1>
+      <p class="lead">In einem echten Produkt waere dies der geschuetzte Bereich nach dem Login.</p>
+    </section>
+
+    <section class="profile-layout">
+      <article id="profileCard" class="card-surface"></article>
+      <article class="card-surface">
+        <p class="eyebrow">Eigene Reisen</p>
+        <h2>Deine Angebote</h2>
+        <div id="hostedTrips" class="stack-list"></div>
+      </article>
+      <article class="card-surface">
+        <p class="eyebrow">Anfragen</p>
+        <h2>Was noch offen ist</h2>
+        <div id="requestList" class="stack-list"></div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

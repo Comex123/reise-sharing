@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reise Sharing</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/data.js" defer></script>
+  <script src="js/storage.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body data-page="home">
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">RS</span>
+      <span>Reise Sharing</span>
+    </a>
+    <nav class="site-nav">
+      <a href="reisen.html">Reisen</a>
+      <a href="reise-erstellen.html">Reise erstellen</a>
+      <a href="profil.html">Profil</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero-shell">
+      <div class="hero-copy card-surface hero-copy-strong">
+        <p class="eyebrow">Lokale Demo fuer gemeinsame Reisen</p>
+        <h1>Reisepartner finden, Kosten teilen und trotzdem privat bleiben.</h1>
+        <p class="lead">Dieser Prototyp zeigt, wie aus einer Idee fuer einen Wochenendtrip oder Roadtrip eine kleine Mitreise-Plattform werden kann. Oeffentlich sieht man nur die Infos, die fuer den ersten Kontakt sinnvoll sind. Alles Persoenliche wird spaeter freigeschaltet.</p>
+
+        <div class="hero-badges">
+          <span>Staedtereisen</span>
+          <span>Roadtrips</span>
+          <span>Budget Trips</span>
+          <span>Abgestufte Sichtbarkeit</span>
+        </div>
+
+        <div class="hero-actions">
+          <a class="button button-primary" href="reisen.html">Reisen entdecken</a>
+          <a class="button button-secondary" href="reise-erstellen.html">Eigene Reise anlegen</a>
+        </div>
+
+        <div class="hero-metrics">
+          <article>
+            <strong id="homeTripCount">10</strong>
+            <span>Beispielreisen</span>
+          </article>
+          <article>
+            <strong id="homeAvgBudget">0 EUR</strong>
+            <span>Durchschnittliches Budget</span>
+          </article>
+          <article>
+            <strong id="homeOpenSeats">0</strong>
+            <span>Offene Plaetze</span>
+          </article>
+        </div>
+      </div>
+
+      <aside class="hero-visual card-surface">
+        <div class="hero-glow"></div>
+        <div class="visual-card visual-card-primary">
+          <p class="eyebrow">Diese Woche gefragt</p>
+          <h2>Prag, Porto und Gardasee</h2>
+          <p class="trip-copy">Kurze Trips mit klarem Budget und wenigen freien Plaetzen bekommen besonders schnell Anfragen.</p>
+        </div>
+
+        <div class="visual-card visual-card-mini">
+          <span class="status-pill">Oeffentlich</span>
+          <p>Ziel, Zeitraum, Budgetrahmen und Reisetyp</p>
+        </div>
+
+        <div class="visual-card visual-card-mini">
+          <span class="status-pill">Privat</span>
+          <p>Telefon, exakter Treffpunkt und persoenliche Kontaktdaten</p>
+        </div>
+      </aside>
+    </section>
+
+    <section class="insight-row">
+      <article class="card-surface feature-card compact-card">
+        <p class="eyebrow">Warum es funktioniert</p>
+        <h3>Niedrige Einstiegshuerde</h3>
+        <p>Menschen sehen schnell, ob Ziel, Zeitraum und Budget zusammenpassen, ohne direkt sensible Infos preiszugeben.</p>
+      </article>
+      <article class="card-surface feature-card compact-card">
+        <p class="eyebrow">Sicherer Aufbau</p>
+        <h3>Infos werden stufenweise freigegeben</h3>
+        <p>Die Plattform trennt oeffentliche Reisedaten klar von privaten Kontaktdaten und finaler Gruppenplanung.</p>
+      </article>
+      <article class="card-surface feature-card compact-card">
+        <p class="eyebrow">MVP freundlich</p>
+        <h3>Perfekt fuer einen lokalen Start</h3>
+        <p>Mit HTML, CSS, JavaScript und localStorage kannst du die Idee zuerst testen, bevor ein Backend noetig wird.</p>
+      </article>
+    </section>
+
+    <section class="section-block">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Beispielangebote</p>
+          <h2>Zehn Reisen als Demo-Inhalt</h2>
+        </div>
+        <a class="text-link" href="reisen.html">Alle Reisen ansehen</a>
+      </div>
+      <div id="featuredTrips" class="trip-grid"></div>
+    </section>
+
+    <section class="journey-grid">
+      <article class="card-surface step-card">
+        <span class="step-number">01</span>
+        <h3>Reise erstellen</h3>
+        <p>Der Gastgeber legt Route, Daten, Budget, freie Plaetze und Reisestil an.</p>
+      </article>
+      <article class="card-surface step-card">
+        <span class="step-number">02</span>
+        <h3>Passende Leute finden</h3>
+        <p>Interessierte filtern nach Ziel, Preis und Stil und senden eine kurze Anfrage.</p>
+      </article>
+      <article class="card-surface step-card">
+        <span class="step-number">03</span>
+        <h3>Anfragen pruefen</h3>
+        <p>Der Gastgeber bestaetigt passende Personen und schaltet weitere Details frei.</p>
+      </article>
+      <article class="card-surface step-card">
+        <span class="step-number">04</span>
+        <h3>Gemeinsam planen</h3>
+        <p>Erst dann folgen Treffpunkt, private Kontakte, Absprachen und Kostenaufteilung.</p>
+      </article>
+    </section>
+
+    <section class="visibility-grid">
+      <article class="card-surface visibility-card">
+        <p class="eyebrow">Oeffentlich sichtbar</p>
+        <h3>Alles fuer den ersten Eindruck</h3>
+        <ul class="bullet-list">
+          <li>Zielort und Startstadt</li>
+          <li>Datum und Dauer</li>
+          <li>Budget pro Person</li>
+          <li>Reisestil und freie Plaetze</li>
+        </ul>
+      </article>
+      <article class="card-surface visibility-card">
+        <p class="eyebrow">Nach Anfrage</p>
+        <h3>Etwas persoenlicher</h3>
+        <ul class="bullet-list">
+          <li>Mehr Details zur Planung</li>
+          <li>Persoenliche Kurzvorstellung</li>
+          <li>Genauere Erwartungen an Mitreisende</li>
+          <li>Absprachen zum Ablauf</li>
+        </ul>
+      </article>
+      <article class="card-surface visibility-card">
+        <p class="eyebrow">Nach Bestaetigung</p>
+        <h3>Geschuetzter Bereich</h3>
+        <ul class="bullet-list">
+          <li>Telefonnummer und E-Mail</li>
+          <li>Genaue Unterkunft oder Treffpunkte</li>
+          <li>Gemeinsame To-do-Liste</li>
+          <li>Detaillierte Kostenaufteilung</li>
+        </ul>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reise erstellen | Reise Sharing</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/data.js" defer></script>
+  <script src="js/storage.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body data-page="create">
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">RS</span>
+      <span>Reise Sharing</span>
+    </a>
+    <nav class="site-nav">
+      <a href="reisen.html">Reisen</a>
+      <a href="reise-erstellen.html" aria-current="page">Reise erstellen</a>
+      <a href="profil.html">Profil</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="page-intro card-surface">
+      <p class="eyebrow">Neues Angebot</p>
+      <h1>Lege eine Reise lokal an</h1>
+      <p class="lead">Dieses Formular speichert die Daten im Browser. Perfekt fuer den ersten Prototypen ohne Server.</p>
+    </section>
+
+    <section class="form-layout">
+      <form id="tripForm" class="card-surface form-card">
+        <div class="form-grid">
+          <label>
+            <span>Titel</span>
+            <input name="title" type="text" placeholder="Wochenende in Prag" required />
+          </label>
+          <label>
+            <span>Startort</span>
+            <input name="startCity" type="text" placeholder="Berlin" required />
+          </label>
+          <label>
+            <span>Zielort</span>
+            <input name="destinationCity" type="text" placeholder="Prag" required />
+          </label>
+          <label>
+            <span>Land</span>
+            <input name="country" type="text" placeholder="Tschechien" required />
+          </label>
+          <label>
+            <span>Startdatum</span>
+            <input name="startDate" type="date" required />
+          </label>
+          <label>
+            <span>Enddatum</span>
+            <input name="endDate" type="date" required />
+          </label>
+          <label>
+            <span>Freie Plaetze</span>
+            <input name="seats" type="number" min="1" max="8" value="2" required />
+          </label>
+          <label>
+            <span>Budget pro Person in EUR</span>
+            <input name="budgetPerPerson" type="number" min="0" step="10" value="150" required />
+          </label>
+          <label>
+            <span>Reisestil</span>
+            <input name="styles" type="text" placeholder="Staedtereise, Food, Budget" required />
+          </label>
+          <label>
+            <span>Kontakt sichtbar ab</span>
+            <select name="contactUnlock">
+              <option value="after-approval">Nach Bestaetigung</option>
+              <option value="after-request">Nach Anfrage</option>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          <span>Beschreibung</span>
+          <textarea name="notes" rows="6" placeholder="Was ist geplant, wer passt gut dazu, was ist im Budget enthalten?" required></textarea>
+        </label>
+
+        <div class="form-actions">
+          <button class="button button-primary" type="submit">Reise speichern</button>
+          <a class="button button-secondary" href="reisen.html">Zur Liste</a>
+        </div>
+      </form>
+
+      <aside class="card-surface side-note">
+        <p class="eyebrow">Hinweis</p>
+        <h2>Was in dieses Formular gehoert</h2>
+        <ul class="bullet-list">
+          <li>Nur allgemeine Reiseinfos, keine private Adresse.</li>
+          <li>Budget moeglichst als groben Rahmen angeben.</li>
+          <li>Persoenliche Kontaktdaten erst spaeter freischalten.</li>
+          <li>Beschreibe lieber Stil und Erwartungen als zu viele sensible Details.</li>
+        </ul>
+        <p id="createMessage" class="status-message">Noch nichts gespeichert.</p>
+      </aside>
+    </section>
+  </main>
+</body>
+</html>
