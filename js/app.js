@@ -119,7 +119,7 @@
       '    <span class="meta-pill">Startet als: ' + escapeHtml(groupTypeLabel(trip)) + '</span>',
       '    <span class="meta-pill">Passend fuer: ' + safeMatchTypes + '</span>',
       '  </div>',
-      '  <p class="trip-copy">' + escapeHtml(excerpt(trip.notes, 140)) + '</p>',
+      '  <p class="trip-copy">' + escapeHtml(excerpt(trip.notes, 90)) + '</p>',
       '  <div class="trip-card-footer">',
       '    <div class="trip-tags">' + safeStyles + '</div>',
       '    <p class="trip-host">Mit ' + escapeHtml(host.name) + ' - Kontakt ' + escapeHtml(unlockLabel(trip.contactUnlock)) + '</p>',
@@ -167,7 +167,7 @@
   function initHome() {
     const trips = getTrips();
     updateHomeMetrics(trips);
-    renderTrips("featuredTrips", trips.slice(0, 6));
+    renderTrips("featuredTrips", trips.slice(0, 4));
   }
 
   function initTripsPage() {
