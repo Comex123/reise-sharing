@@ -10,26 +10,36 @@
   <script src="js/app.js" defer></script>
 </head>
 <body data-page="trips">
-  <header class="site-header">
-    <a class="brand" href="index.html">
-      <span class="brand-mark">RS</span>
-      <span>Reise Sharing</span>
-    </a>
-    <nav class="site-nav">
-      <a href="reisen.html" aria-current="page">Reisen</a>
-      <a href="reise-erstellen.html">Reise erstellen</a>
-      <a href="profil.html">Profil</a>
-    </nav>
-  </header>
+  <div class="app-shell">
+    <header class="site-header app-header">
+      <div class="app-header-top">
+        <a class="brand" href="index.html">
+          <span class="brand-mark">RS</span>
+          <span class="brand-copy">
+            <strong>Reise Sharing</strong>
+            <small>App Prototype</small>
+          </span>
+        </a>
+        <div class="app-header-meta">
+          <span class="app-badge">Entdecken</span>
+        </div>
+      </div>
+      <nav class="site-nav">
+        <a href="index.html">Start</a>
+        <a href="reisen.html" aria-current="page">Reisen</a>
+        <a href="reise-erstellen.html">Anlegen</a>
+        <a href="profil.html">Profil</a>
+      </nav>
+    </header>
 
-  <main>
-    <section class="page-intro card-surface page-intro-strong">
+    <main class="app-main page-stack">
+      <section class="page-intro card-surface page-intro-strong app-intro-card">
       <p class="eyebrow">Reiseangebote</p>
-      <h1>Finde gemeinsame Trips statt allein zu planen</h1>
-      <p class="lead">Hier liegen zehn Beispielreisen bereit. Neben Ziel, Budget und Reisetyp kannst du jetzt auch gezielt danach filtern, ob ein Angebot eher fuer Singles, Paare, Familien oder Freundesgruppen passt.</p>
-    </section>
+      <h1>Finde gemeinsame Trips wie in einem App-Feed</h1>
+      <p class="lead">Der Aufbau ist jetzt kompakter und mehr auf mobile Nutzung gedacht. Filter, Gruppen-Typen und Reisearten liegen direkt in einer App-aehnlichen Entdecken-Ansicht.</p>
+      </section>
 
-    <section class="filter-shell card-surface">
+      <section class="filter-shell card-surface app-filter-panel">
       <div class="filter-row">
         <label>
           <span>Ziel oder Land</span>
@@ -80,17 +90,25 @@
 
         <button id="clearFilters" class="button button-secondary button-small" type="button">Filter zuruecksetzen</button>
       </div>
-    </section>
+      </section>
 
-    <section class="section-block compact-top">
-      <div class="section-heading">
+      <section class="section-block compact-top">
+      <div class="app-section-header">
         <div>
           <p class="eyebrow">Ergebnisse</p>
           <h2 id="tripCount">0 Reisen</h2>
         </div>
       </div>
       <div id="tripGrid" class="trip-grid"></div>
-    </section>
-  </main>
+      </section>
+    </main>
+
+    <nav class="app-footer-nav card-surface" aria-label="App Navigation">
+      <a href="index.html">Start</a>
+      <a href="reisen.html" aria-current="page">Entdecken</a>
+      <a href="reise-erstellen.html">Anlegen</a>
+      <a href="profil.html">Profil</a>
+    </nav>
+  </div>
 </body>
 </html>

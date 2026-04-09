@@ -10,26 +10,36 @@
   <script src="js/app.js" defer></script>
 </head>
 <body data-page="create">
-  <header class="site-header">
-    <a class="brand" href="index.html">
-      <span class="brand-mark">RS</span>
-      <span>Reise Sharing</span>
-    </a>
-    <nav class="site-nav">
-      <a href="reisen.html">Reisen</a>
-      <a href="reise-erstellen.html" aria-current="page">Reise erstellen</a>
-      <a href="profil.html">Profil</a>
-    </nav>
-  </header>
+  <div class="app-shell">
+    <header class="site-header app-header">
+      <div class="app-header-top">
+        <a class="brand" href="index.html">
+          <span class="brand-mark">RS</span>
+          <span class="brand-copy">
+            <strong>Reise Sharing</strong>
+            <small>App Prototype</small>
+          </span>
+        </a>
+        <div class="app-header-meta">
+          <span class="app-badge">Neuer Trip</span>
+        </div>
+      </div>
+      <nav class="site-nav">
+        <a href="index.html">Start</a>
+        <a href="reisen.html">Reisen</a>
+        <a href="reise-erstellen.html" aria-current="page">Anlegen</a>
+        <a href="profil.html">Profil</a>
+      </nav>
+    </header>
 
-  <main>
-    <section class="page-intro card-surface">
+    <main class="app-main page-stack">
+      <section class="page-intro card-surface app-intro-card">
       <p class="eyebrow">Neues Angebot</p>
-      <h1>Lege eine Reise lokal an</h1>
-      <p class="lead">Dieses Formular speichert die Daten im Browser. Perfekt fuer den ersten Prototypen ohne Server.</p>
-    </section>
+      <h1>Lege einen Trip direkt in der App an</h1>
+      <p class="lead">Der Erstellen-Bereich ist jetzt wie ein App-Composer aufgebaut: kompakt, mobil freundlich und bereit fuer einen spaeteren echten App-Flow.</p>
+      </section>
 
-    <section class="form-layout">
+      <section class="form-layout">
       <form id="tripForm" class="card-surface form-card">
         <div class="form-grid">
           <label>
@@ -131,7 +141,15 @@
         </ul>
         <p id="createMessage" class="status-message">Noch nichts gespeichert.</p>
       </aside>
-    </section>
-  </main>
+      </section>
+    </main>
+
+    <nav class="app-footer-nav card-surface" aria-label="App Navigation">
+      <a href="index.html">Start</a>
+      <a href="reisen.html">Entdecken</a>
+      <a href="reise-erstellen.html" aria-current="page">Anlegen</a>
+      <a href="profil.html">Profil</a>
+    </nav>
+  </div>
 </body>
 </html>

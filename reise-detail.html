@@ -10,26 +10,44 @@
   <script src="js/app.js" defer></script>
 </head>
 <body data-page="detail">
-  <header class="site-header">
-    <a class="brand" href="index.html">
-      <span class="brand-mark">RS</span>
-      <span>Reise Sharing</span>
-    </a>
-    <nav class="site-nav">
-      <a href="reisen.html">Reisen</a>
-      <a href="reise-erstellen.html">Reise erstellen</a>
+  <div class="app-shell">
+    <header class="site-header app-header">
+      <div class="app-header-top">
+        <a class="brand" href="index.html">
+          <span class="brand-mark">RS</span>
+          <span class="brand-copy">
+            <strong>Reise Sharing</strong>
+            <small>App Prototype</small>
+          </span>
+        </a>
+        <div class="app-header-meta">
+          <span class="app-badge">Trip Detail</span>
+        </div>
+      </div>
+      <nav class="site-nav">
+        <a href="index.html">Start</a>
+        <a href="reisen.html" aria-current="page">Reisen</a>
+        <a href="reise-erstellen.html">Anlegen</a>
+        <a href="profil.html">Profil</a>
+      </nav>
+    </header>
+
+    <main class="app-main page-stack">
+      <section class="page-intro card-surface app-intro-card">
+      <p class="eyebrow">Detailansicht</p>
+      <h1>Trip-Detail mit App-Ansicht</h1>
+      <p class="lead">Hier sieht man die oeffentlichen Eckdaten. Private Infos bleiben verborgen, bis eine Anfrage bestaetigt wurde.</p>
+      </section>
+
+      <div id="tripDetail" class="detail-layout"></div>
+    </main>
+
+    <nav class="app-footer-nav card-surface" aria-label="App Navigation">
+      <a href="index.html">Start</a>
+      <a href="reisen.html" aria-current="page">Entdecken</a>
+      <a href="reise-erstellen.html">Anlegen</a>
       <a href="profil.html">Profil</a>
     </nav>
-  </header>
-
-  <main>
-    <section class="page-intro card-surface">
-      <p class="eyebrow">Detailansicht</p>
-      <h1>Reise mit abgestufter Sichtbarkeit</h1>
-      <p class="lead">Hier sieht man die oeffentlichen Eckdaten. Private Infos bleiben verborgen, bis eine Anfrage bestaetigt wurde.</p>
-    </section>
-
-    <div id="tripDetail" class="detail-layout"></div>
-  </main>
+  </div>
 </body>
 </html>

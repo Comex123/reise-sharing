@@ -10,26 +10,36 @@
   <script src="js/app.js" defer></script>
 </head>
 <body data-page="profile">
-  <header class="site-header">
-    <a class="brand" href="index.html">
-      <span class="brand-mark">RS</span>
-      <span>Reise Sharing</span>
-    </a>
-    <nav class="site-nav">
-      <a href="reisen.html">Reisen</a>
-      <a href="reise-erstellen.html">Reise erstellen</a>
-      <a href="profil.html" aria-current="page">Profil</a>
-    </nav>
-  </header>
+  <div class="app-shell">
+    <header class="site-header app-header">
+      <div class="app-header-top">
+        <a class="brand" href="index.html">
+          <span class="brand-mark">RS</span>
+          <span class="brand-copy">
+            <strong>Reise Sharing</strong>
+            <small>App Prototype</small>
+          </span>
+        </a>
+        <div class="app-header-meta">
+          <span class="app-badge">Profil</span>
+        </div>
+      </div>
+      <nav class="site-nav">
+        <a href="index.html">Start</a>
+        <a href="reisen.html">Reisen</a>
+        <a href="reise-erstellen.html">Anlegen</a>
+        <a href="profil.html" aria-current="page">Profil</a>
+      </nav>
+    </header>
 
-  <main>
-    <section class="page-intro card-surface">
+    <main class="app-main page-stack">
+      <section class="page-intro card-surface app-intro-card">
       <p class="eyebrow">Persoenlicher Bereich</p>
-      <h1>Profil, eigene Reisen und offene Anfragen</h1>
-      <p class="lead">In einem echten Produkt waere dies der geschuetzte Bereich nach dem Login.</p>
-    </section>
+      <h1>Profil, Anfragen und eigene Trips in einer App-Ansicht</h1>
+      <p class="lead">Dieser Bereich ist jetzt wie ein Account-Screen aufgebaut. Spaeter kann hier echtes Login, Chat und Freigabe-Logik andocken.</p>
+      </section>
 
-    <section class="profile-layout">
+      <section class="profile-layout">
       <article id="profileCard" class="card-surface"></article>
       <article class="card-surface">
         <p class="eyebrow">Eigene Reisen</p>
@@ -41,7 +51,15 @@
         <h2>Was noch offen ist</h2>
         <div id="requestList" class="stack-list"></div>
       </article>
-    </section>
-  </main>
+      </section>
+    </main>
+
+    <nav class="app-footer-nav card-surface" aria-label="App Navigation">
+      <a href="index.html">Start</a>
+      <a href="reisen.html">Entdecken</a>
+      <a href="reise-erstellen.html">Anlegen</a>
+      <a href="profil.html" aria-current="page">Profil</a>
+    </nav>
+  </div>
 </body>
 </html>
